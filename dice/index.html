@@ -53,17 +53,18 @@
       transition: box-shadow 0.3s, border-color 0.3s;
     }
 
-    /* 상단 탑바 */
+    /* 상단 탑바: 절대 찌그러지지 않도록 고정 */
     .top-bar {
-      min-height: 105px;
+      height: 108px;
+      min-height: 108px;
       background: #0d1117;
       border-bottom: 2px solid #21262d;
       display: flex;
       padding: 6px 12px;
       gap: 10px;
       align-items: center;
-      overflow-x: auto;
       flex-shrink: 0;
+      z-index: 20;
     }
     .status-panel {
       display: flex;
@@ -77,18 +78,22 @@
     .status-panel span strong { color: #58a6ff; font-family: 'Press Start 2P', cursive; font-size: 0.6rem; }
     .gold-text { color: #f1e05a; font-weight: bold; }
 
+    /* 조커 슬롯: 축소 방지 및 가로 스크롤 보장 */
     .joker-shelf {
       flex: 1;
-      display: flex;
-      gap: 8px;
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 10px;
       background: #161b22;
       border: 2px dashed #30363d;
       border-radius: 8px;
-      padding: 4px 8px;
-      height: 100%;
+      padding: 6px 10px;
+      height: 88px;
       align-items: center;
       overflow-x: auto;
-      min-width: 180px;
+      overflow-y: hidden;
+      white-space: nowrap;
+      min-width: 160px;
     }
 
     .consumable-shelf {
@@ -97,7 +102,7 @@
       border: 2px dashed #8957e5;
       border-radius: 8px;
       padding: 4px;
-      height: 100%;
+      height: 88px;
       display: flex;
       gap: 6px;
       align-items: center;
@@ -105,21 +110,23 @@
       flex-shrink: 0;
     }
 
-    /* 조커 큐브 디자인 */
+    /* 조커 주사위 큐브: 가로/세로 72px 고정 */
     .joker-die-cube {
-      width: 66px;
-      height: 66px;
+      width: 72px !important;
+      min-width: 72px !important;
+      height: 72px !important;
+      min-height: 72px !important;
       background: #21262d;
       border: 2px solid #58a6ff;
       border-radius: 10px;
-      display: flex;
+      display: flex !important;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: space-around;
       align-items: center;
       padding: 3px;
       position: relative;
       cursor: pointer;
-      flex-shrink: 0;
+      flex-shrink: 0 !important;
       box-shadow: 0 4px 0 #12151a, 0 6px 10px rgba(0,0,0,0.6);
       transition: transform 0.12s;
     }
@@ -145,8 +152,8 @@
 
     /* 소모품 카드 */
     .tarot-card {
-      width: 70px;
-      height: 82px;
+      width: 68px;
+      height: 80px;
       background: #1e1530;
       border: 2px solid #8957e5;
       border-radius: 6px;
@@ -161,7 +168,7 @@
     }
     .tarot-card.planet-card { background: #0f2038; border-color: #388bfd; }
 
-    /* 에디션 효과 */
+    /* 에디션 셰이더 */
     .edition-foil { border-color: #58a6ff !important; background: linear-gradient(135deg, #1f6feb 0%, #0d1117 75%) !important; box-shadow: 0 0 10px rgba(88, 166, 255, 0.8) !important; }
     .edition-holo { border-color: #f778ba !important; animation: holoAnim 1.8s infinite alternate; box-shadow: 0 0 10px rgba(247, 120, 186, 0.8) !important; }
     @keyframes holoAnim {
@@ -248,7 +255,7 @@
     .mult-badge.flame { animation: flamePump 0.2s ease infinite alternate; }
     @keyframes flamePump { from { transform: scale(1); } to { transform: scale(1.15); filter: brightness(1.4); } }
 
-    /* 모바일 반응형 가변 주사위 트레이 */
+    /* 반응형 가변 주사위 트레이 */
     .dice-tray {
       display: flex;
       justify-content: center;
@@ -406,9 +413,7 @@
     #hoverTooltip .tooltip-desc { font-size: 0.68rem; color: #c9d1d9; line-height: 1.3; }
     #hoverTooltip .tooltip-edition { font-size: 0.62rem; color: #58a6ff; margin-top: 3px; font-weight: bold; }
 
-    /* ──────────────────────────────────────────
-       모바일 화면 분기 최적화 (Max-Width 860px)
-       ────────────────────────────────────────── */
+    /* 모바일 분기 (Max-Width 860px) */
     @media (max-width: 860px) {
       body { padding: 2px; }
       .game-cabinet {
@@ -424,15 +429,14 @@
       }
       .status-panel { min-width: 95px; font-size: 0.68rem; }
       .status-panel span strong { font-size: 0.55rem; }
-      .joker-shelf { min-width: 140px; }
-      .joker-die-cube { width: 56px; height: 56px; border-radius: 8px; }
+      .joker-shelf { min-width: 140px; height: 78px; }
+      .joker-die-cube { width: 60px !important; min-width: 60px !important; height: 60px !important; min-height: 60px !important; border-radius: 8px; }
       .joker-icon-center { font-size: 1.15rem; }
       .joker-mini-title { font-size: 0.45rem; }
 
-      .consumable-shelf { min-width: 125px; }
-      .tarot-card { width: 56px; height: 68px; }
+      .consumable-shelf { min-width: 125px; height: 78px; }
+      .tarot-card { width: 54px; height: 68px; }
 
-      /* 세로 스택 전환 */
       .playfield {
         flex-direction: column;
       }
@@ -821,12 +825,28 @@
     }
 
     // ──────────────────────────────────────────────────
-    // [5] 툴팁 & 렌더링 시스템 (모바일 터치 호환)
+    // [5] 툴팁 & 렌더링 시스템 (모바일 툴팁 잔상 버그 해결)
     // ──────────────────────────────────────────────────
     const hoverTooltip = document.getElementById("hoverTooltip");
     const ttTitle = document.getElementById("ttTitle");
     const ttDesc = document.getElementById("ttDesc");
     const ttEdition = document.getElementById("ttEdition");
+
+    function hideTooltip() {
+      hoverTooltip.style.display = "none";
+    }
+
+    // 모바일/PC 빈 화면 터치/클릭 시 툴팁 무조건 닫기
+    document.addEventListener("touchstart", (e) => {
+      if (!e.target.closest(".die") && !e.target.closest(".joker-die-cube") && !e.target.closest(".tarot-card")) {
+        hideTooltip();
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".die") && !e.target.closest(".joker-die-cube") && !e.target.closest(".tarot-card")) {
+        hideTooltip();
+      }
+    });
 
     function attachTooltip(element, title, desc, editionKey = "base") {
       const show = (clientX, clientY) => {
@@ -850,7 +870,7 @@
       };
 
       element.addEventListener("mouseenter", (e) => show(e.clientX, e.clientY));
-      element.addEventListener("mouseleave", () => { hoverTooltip.style.display = "none"; });
+      element.addEventListener("mouseleave", hideTooltip);
     }
 
     const PIP_PATTERNS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
@@ -892,7 +912,9 @@
 
         attachTooltip(die, `주사위 #${i+1} [${dieObj.type}]`, `눈: ${dieObj.val} (칩에 합산)`, dieObj.edition);
 
+        // 주사위 클릭/터치 이벤트: 툴팁을 즉시 닫고 고정/해제 상태를 전환
         die.addEventListener("click", () => {
+          hideTooltip(); // 모바일 툴팁 잔상 버그 완벽 해결
           if (G.activeTarotCard) {
             applyTarotToDie(i);
             return;
@@ -914,12 +936,18 @@
       });
     }
 
+    // 상단 조커 큐브 렌더링 버그 수정
     function renderJokersUI() {
       const shelf = document.getElementById("jokerShelf");
       if (!shelf) return;
       shelf.innerHTML = "";
       const extraSlots = G.jokers.filter(j => j.edition === "negative").length;
       document.getElementById("jokerCountText").textContent = `${G.jokers.length}/${G.maxJokers + extraSlots}`;
+
+      if (G.jokers.length === 0) {
+        shelf.innerHTML = `<span style="font-size:0.6rem; color:#484f58; margin:auto;">보유 조커 없음</span>`;
+        return;
+      }
 
       G.jokers.forEach((joker, idx) => {
         const ed = EDITIONS[joker.edition] || EDITIONS.base;
@@ -936,7 +964,7 @@
 
         attachTooltip(cube, joker.title, joker.desc, joker.edition);
 
-        // 모바일 터치 시 판매 활성화 지원
+        // 모바일 터치 시 판매 버튼 토글
         cube.addEventListener("click", (e) => {
           if (e.target.tagName !== 'BUTTON') {
             const btn = cube.querySelector(".btn-sell-small");
@@ -946,7 +974,7 @@
 
         cube.querySelector(`[data-sell-joker="${idx}"]`).addEventListener("click", (e) => {
           e.stopPropagation();
-          hoverTooltip.style.display = "none";
+          hideTooltip();
           G.gold += sellVal;
           G.jokers.splice(idx, 1);
           SFX.cash();
@@ -985,7 +1013,7 @@
 
         el.querySelector(`[data-sell-item="${idx}"]`).addEventListener("click", (e) => {
           e.stopPropagation();
-          hoverTooltip.style.display = "none";
+          hideTooltip();
           G.gold += 1;
           G.consumables.splice(idx, 1);
           SFX.cash();
@@ -995,7 +1023,7 @@
 
         el.querySelector(`[data-use-item="${idx}"]`).addEventListener("click", (e) => {
           e.stopPropagation();
-          hoverTooltip.style.display = "none";
+          hideTooltip();
           useConsumable(idx);
         });
 
@@ -1124,6 +1152,7 @@
     // ──────────────────────────────────────────────────
     function rollDice(forceAll = false) {
       SFX.roll();
+      hideTooltip();
       for (let i = 0; i < G.currentHand.length; i++) {
         if (forceAll || !G.locked[i]) {
           const el = document.getElementById(`die-${i}`);
@@ -1159,6 +1188,7 @@
       G.handsLeft--;
       document.getElementById("multBadge").classList.add("flame");
       SFX.mult();
+      hideTooltip();
 
       G.currentHand.forEach(d => {
         if (d.type === "gold") G.gold += 3;
@@ -1246,7 +1276,7 @@
           let extra = G.jokers.filter(x => x.edition === "negative").length;
           if (G.jokers.length >= (G.maxJokers + extra)) return alert("조커 슬롯이 꽉 찼습니다! 기존 조커를 판매하세요.");
           G.jokers.push(jokerObj);
-          renderJokersUI();
+          renderJokersUI(); // 조커 선반 즉시 반영
         }));
       }
 
