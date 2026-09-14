@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DICEATRO 🎲 (Balatro-style Roguelike Dice)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background-color: #080b10;
+      color: #e2e8f0;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .crt-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  radial-gradient(circle, rgba(0,0,0,0) 65%, rgba(0,0,0,0.7) 100%);
+      background-size: 100% 4px, 100% 100%;
+      pointer-events: none;
+      z-index: 300;
+    }
+
+    .purple-aura-active {
+      box-shadow: inset 0 0 60px #8957e5, 0 0 40px #8957e5 !important;
+      border-color: #d2a8ff !important;
+    }
+
+    .game-cabinet {
+      width: 1100px;
+      height: 760px;
+      background: #161b22;
+      border: 4px solid #30363d;
+      border-radius: 16px;
+      box-shadow: 0 0 35px rgba(0, 255, 170, 0.15), inset 0 0 20px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+
+    /* 상단 탑바 */
+    .top-bar {
+      height: 116px;
+      background: #0d1117;
+      border-bottom: 3px solid #21262d;
+      display: flex;
+      padding: 8px 14px;
+      gap: 12px;
+      align-items: center;
+    }
+    .status-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 0.78rem;
+      color: #8b949e;
+      min-width: 135px;
+    }
+    .status-panel span strong { color: #58a6ff; font-family: 'Press Start 2P', cursive; font-size: 0.65rem; }
+    .gold-text { color: #f1e05a; font-weight: bold; }
+
+    .joker-shelf {
+      flex: 1;
+      display: flex;
+      gap: 10px;
+      background: #161b22;
+      border: 2px dashed #30363d;
+      border-radius: 8px;
+      padding: 6px 12px;
+      height: 100%;
+      align-items: center;
+      overflow-x: auto;
+    }
+
+    .consumable-shelf {
+      min-width: 190px;
+      background: #161b22;
+      border: 2px dashed #8957e5;
+      border-radius: 8px;
+      padding: 6px;
+      height: 100%;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 조커 큐브 디자인 */
+    .joker-die-cube {
+      width: 76px;
+      height: 76px;
+      background: #21262d;
+      border: 3px solid #58a6ff;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 6px 0 #12151a, 0 8px 12px rgba(0,0,0,0.6);
+      transition: transform 0.12s, border-color 0.12s;
+    }
+    .joker-die-cube:hover { transform: translateY(-4px); border-color: #f1e05a; }
+    .joker-icon-center { font-size: 1.6rem; margin-top: 2px; }
+    .joker-mini-title { font-size: 0.55rem; color: #fff; font-weight: bold; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+    .btn-sell-small {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      background: #da3633;
+      color: #fff;
+      border: 1px solid #fff;
+      border-radius: 10px;
+      font-size: 0.5rem;
+      padding: 2px 5px;
+      cursor: pointer;
+      display: none;
+      z-index: 20;
+    }
+    .joker-die-cube:hover .btn-sell-small { display: block; }
+
+    /* 소모품 카드 */
+    .tarot-card {
+      width: 80px;
+      height: 94px;
+      background: #1e1530;
+      border: 2px solid #8957e5;
+      border-radius: 6px;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .tarot-card.planet-card { background: #0f2038; border-color: #388bfd; }
+    .tarot-card:hover { transform: translateY(-3px); border-color: #f1e05a; }
+
+    /* 발라트로 4대 에디션 셰이더 */
+    .edition-foil {
+      border-color: #58a6ff !important;
+      background: linear-gradient(135deg, #1f6feb 0%, #0d1117 75%) !important;
+      box-shadow: 0 0 12px rgba(88, 166, 255, 0.8) !important;
+    }
+    .edition-holo {
+      border-color: #f778ba !important;
+      animation: holoAnim 1.8s infinite alternate;
+      box-shadow: 0 0 12px rgba(247, 120, 186, 0.8) !important;
+    }
+    @keyframes holoAnim {
+      0% { filter: drop-shadow(-2px 0 #ff0055) drop-shadow(2px 0 #00ffff); }
+      100% { filter: drop-shadow(2px 0 #ff0055) drop-shadow(-2px 0 #00ffff); }
+    }
+    .edition-poly {
+      background: linear-gradient(125deg, #ff0055, #ff9900, #ffee00, #00ff66, #00ffff, #0066ff, #cc00ff) !important;
+      background-size: 300% 300% !important;
+      animation: rainbowShift 3s ease infinite !important;
+      border-color: #ffffff !important;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.8) !important;
+    }
+    @keyframes rainbowShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .edition-negative {
+      background: #000000 !important;
+      border-color: #ffffff !important;
+      filter: invert(1);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.9) !important;
+    }
+    .edition-badge-tag {
+      position: absolute;
+      bottom: -6px;
+      right: 2px;
+      font-size: 0.48rem;
+      font-weight: bold;
+      padding: 1px 4px;
+      border-radius: 3px;
+      background: #0d1117;
+      color: #f1e05a;
+      border: 1px solid #30363d;
+      z-index: 10;
+    }
+
+    /* 플로팅 툴팁 */
+    #hoverTooltip {
+      position: fixed;
+      pointer-events: none;
+      background: #161b22;
+      border: 2px solid #58a6ff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      max-width: 260px;
+      z-index: 400;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      display: none;
+    }
+    #hoverTooltip .tooltip-title { font-size: 0.8rem; font-weight: bold; color: #f1e05a; margin-bottom: 4px; }
+    #hoverTooltip .tooltip-desc { font-size: 0.7rem; color: #c9d1d9; line-height: 1.3; }
+    #hoverTooltip .tooltip-edition { font-size: 0.65rem; color: #58a6ff; margin-top: 4px; font-weight: bold; }
+
+    /* 메인 필드 */
+    .playfield { flex: 1; display: flex; position: relative; }
+
+    .enemy-stage {
+      width: 300px;
+      background: #0d1117;
+      border-right: 3px solid #21262d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      gap: 8px;
+    }
+    .stage-badge {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.7rem;
+      padding: 5px 8px;
+      border-radius: 4px;
+      background: #ff7b72;
+      color: #000;
+      text-align: center;
+      width: 100%;
+    }
+    #enemyCanvas { width: 170px; height: 135px; background: #161b22; border: 2px solid #30363d; border-radius: 12px; }
+
+    .target-gauge { width: 100%; background: #21262d; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .gauge-label { display: flex; justify-content: space-between; font-size: 0.75rem; }
+    .gauge-bar-bg { width: 100%; height: 10px; background: #000; border-radius: 5px; overflow: hidden; }
+    .gauge-bar-fill { width: 0%; height: 100%; background: #2ea043; transition: width 0.3s ease; }
+
+    /* 타로 타겟팅 상태 바 */
+    #tarotTargetBanner {
+      display: none;
+      background: #8957e5;
+      color: #fff;
+      padding: 8px 16px;
+      font-size: 0.75rem;
+      font-family: 'Press Start 2P', cursive;
+      border-radius: 6px;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      box-shadow: 0 0 15px rgba(137, 87, 229, 0.7);
+    }
+
+    /* 우측 주사위 보드 */
+    .dice-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 22px;
+      background: radial-gradient(circle at center, #1b222d 0%, #10141b 100%);
+      position: relative;
+    }
+
+    .score-board { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 65px; }
+    .hand-name { font-family: 'Press Start 2P', cursive; font-size: 1rem; color: #f1e05a; text-shadow: 0 0 8px rgba(241, 224, 90, 0.5); }
+    .score-formula { display: flex; align-items: center; gap: 8px; font-size: 1.4rem; font-weight: bold; }
+    .chip-badge { background: #1f6feb; color: #fff; padding: 3px 12px; border-radius: 6px; box-shadow: 0 0 10px rgba(31, 111, 235, 0.6); }
+    .mult-badge { background: #da3633; color: #fff; padding: 3px 12px; border-radius: 6px; box-shadow: 0 0 10px rgba(218, 54, 51, 0.6); }
+    .mult-badge.flame { animation: flamePump 0.2s ease infinite alternate; }
+    @keyframes flamePump { from { transform: scale(1); } to { transform: scale(1.15); filter: brightness(1.4); } }
+
+    /* 주사위 트레이 */
+    .dice-tray { display: flex; justify-content: center; align-items: center; gap: 14px; min-height: 125px; }
+    .die-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; }
+    .die {
+      width: 72px;
+      height: 72px;
+      background: #f0f6fc;
+      border-radius: 12px;
+      box-shadow: 0 7px 0 #8b949e, 0 10px 15px rgba(0,0,0,0.6);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 7px;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+      position: relative;
+    }
+    .die:hover { transform: translateY(-3px); }
+    .die.locked { background: #f1e05a; transform: translateY(-14px); box-shadow: 0 7px 0 #b08800, 0 14px 18px rgba(241, 224, 90, 0.3); }
+    
+    .die.die-gold { background: #ffd700 !important; box-shadow: 0 7px 0 #b8860b !important; }
+    .die.die-glass { background: rgba(180, 230, 255, 0.75) !important; backdrop-filter: blur(4px); border: 2px solid #fff; }
+    .die.die-steel { background: #8b949e !important; box-shadow: 0 7px 0 #484f58 !important; border: 2px solid #c9d1d9; }
+    .die.die-lucky { background: #3fb950 !important; box-shadow: 0 7px 0 #238636 !important; }
+    .die.die-always6 { background: #ff4757 !important; box-shadow: 0 7px 0 #9e1c27 !important; border: 2px solid #fff; }
+    .die.die-d20 { background: #5f27cd !important; box-shadow: 0 7px 0 #341f97 !important; border: 2px solid #ff9ff3; }
+
+    /* 숫자 직접 표기용 주사위 센터 라벨 (D10, D20 등) */
+    .die-center-num {
+      grid-column: 1 / span 3;
+      grid-row: 1 / span 3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 5px #000;
+    }
+
+    .die.tarot-targetable {
+      outline: 4px solid #d2a8ff;
+      animation: tarotPulse 0.7s infinite alternate;
+      cursor: crosshair;
+    }
+    @keyframes tarotPulse { from { transform: scale(1); } to { transform: scale(1.08); outline-color: #f1e05a; } }
+
+    .die.rolling { animation: dieShake 0.35s ease infinite; }
+    @keyframes dieShake {
+      0% { transform: rotate(0deg) scale(0.95); } 25% { transform: rotate(-10deg) scale(1.05); }
+      50% { transform: rotate(10deg) scale(0.9); } 75% { transform: rotate(-6deg) scale(1.02); } 100% { transform: rotate(0deg) scale(1); }
+    }
+    .pip { width: 10px; height: 10px; background: #0d1117; border-radius: 50%; justify-self: center; align-self: center; opacity: 0; }
+    .pip.active { opacity: 1; }
+
+    .controls-deck {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0d1117;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 8px 16px;
+    }
+    .round-info { font-size: 0.8rem; color: #8b949e; display: flex; gap: 12px; }
+    .round-info span strong { color: #fff; font-size: 1rem; }
+
+    .btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.7rem;
+      padding: 9px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-reroll { background: #8957e5; color: #fff; box-shadow: 0 4px 0 #5a32a3; }
+    .btn-play { background: #2ea043; color: #fff; box-shadow: 0 4px 0 #1b6028; }
+    .btn-deck { background: #1f6feb; color: #fff; box-shadow: 0 4px 0 #114594; }
+
+    /* 상점 모달 */
+    .modal-backdrop {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10, 12, 16, 0.94);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 250;
+      flex-direction: column;
+      padding: 16px;
+    }
+    .modal-board {
+      width: 100%;
+      max-width: 980px;
+      background: #161b22;
+      border: 3px solid #f1e05a;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .shop-items-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, auto);
+      gap: 10px;
+    }
+    .shop-item-card {
+      background: #21262d;
+      border: 2px solid #30363d;
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 145px;
+      position: relative;
+    }
+
+    #btnToggleShopFloat {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 260;
+      display: none;
+      background: #f1e05a;
+      color: #0c1017;
+      box-shadow: 0 4px 0 #b08800;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="crt-overlay"></div>
+
+  <!-- 마우스 호버 자동 플로팅 툴팁 -->
+  <div id="hoverTooltip">
+    <div class="tooltip-title" id="ttTitle"></div>
+    <div class="tooltip-desc" id="ttDesc"></div>
+    <div class="tooltip-edition" id="ttEdition"></div>
+  </div>
+
+  <div class="game-cabinet" id="gameCabinet">
+    <!-- 상단: 스탯, 조커 선반, 소모품 슬롯 -->
+    <div class="top-bar">
+      <div class="status-panel">
+        <span>ANTE: <strong id="anteText">1/8</strong></span>
+        <span>보유 골드: <span id="goldText" class="gold-text">$4</span></span>
+        <span>덱: <strong id="deckCountText">5개</strong></span>
+      </div>
+
+      <div class="joker-shelf" id="jokerShelf"></div>
+
+      <div class="consumable-shelf" id="consumableShelf"></div>
+    </div>
+
+    <!-- 메인 필드 -->
+    <div class="playfield">
+      <div class="enemy-stage">
+        <div id="stageBadge" class="stage-badge">스몰 블라인드</div>
+        <canvas id="enemyCanvas" width="170" height="135"></canvas>
+        <div id="bossRuleBox" style="display:none; font-size:0.7rem; color:#ff7b72; text-align:center;"></div>
+        
+        <div class="target-gauge">
+          <div class="gauge-label">
+            <span>목표 점수</span>
+            <strong id="targetScoreText">300</strong>
+          </div>
+          <div class="gauge-bar-bg">
+            <div id="gaugeFill" class="gauge-bar-fill"></div>
+          </div>
+          <div class="gauge-label" style="font-size:0.7rem; color:#8b949e;">
+            <span>현재 달성</span>
+            <strong id="currentScoreText">0</strong>
+          </div>
+        </div>
+
+        <button id="btnViewHandsAndVouchers" class="btn btn-reroll" style="width:100%; font-size:0.6rem; margin-top:auto;">📜 족보 레벨 & 바우처 확인</button>
+        <button id="btnViewDeck" class="btn btn-deck" style="width:100%; font-size:0.65rem; margin-top:6px;">전체 주사위 덱 확인 🎲</button>
+      </div>
+
+      <div class="dice-stage">
+        <!-- 타로 타겟팅 상태 바 -->
+        <div id="tarotTargetBanner">
+          <span id="tarotBannerText">타로를 적용할 주사위를 선택하세요!</span>
+          <button id="btnCancelTarot" class="btn btn-deck" style="font-size:0.6rem; padding:4px 8px;">취소</button>
+        </div>
+
+        <div class="score-board">
+          <div id="handName" class="hand-name">준비 완료</div>
+          <div class="score-formula">
+            <div id="chipBadge" class="chip-badge">0 CHIPS</div>
+            <span style="color:#8b949e;">×</span>
+            <div id="multBadge" class="mult-badge">0 MULT</div>
+          </div>
+        </div>
+
+        <div class="dice-tray" id="diceTray"></div>
+
+        <div class="controls-deck">
+          <div class="round-info">
+            <span>남은 굴림: <strong id="handsLeftText">3</strong></span>
+            <span>리롤: <strong id="rerollsLeftText">2</strong></span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button id="btnReroll" class="btn btn-reroll">리롤 🔄</button>
+            <button id="btnPlay" class="btn btn-play">제출 💥</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 상점 모달 (고정 8슬롯) -->
+    <div id="shopModal" class="modal-backdrop">
+      <div class="modal-board">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px dashed #30363d; padding-bottom:6px;">
+          <h2 style="font-family:'Press Start 2P', cursive; color:#f1e05a; font-size:0.9rem;">보따리 상점 🛒</h2>
+          <div style="display:flex; gap:10px; align-items:center;">
+            <span style="color:#f1e05a; font-weight:bold;">내 골드: <span id="shopGoldText">$0</span></span>
+            <button id="btnShopReroll" class="btn btn-reroll" style="padding:6px 10px; font-size:0.65rem;">상점 리롤 ($2) 🔄</button>
+            <button id="btnMinimizeShop" class="btn btn-deck" style="padding:6px 10px; font-size:0.65rem;">잠깐 닫기 (판매/타로) 👁️</button>
+          </div>
+        </div>
+
+        <div class="shop-items-grid" id="shopItemsGrid"></div>
+
+        <div style="display:flex; justify-content:flex-end;">
+          <button id="btnNextRound" class="btn btn-play" style="padding:10px 18px;">다음 라운드로 ➔</button>
+        </div>
+      </div>
+    </div>
+
+    <button id="btnToggleShopFloat" class="btn">상점 다시 열기 🛒</button>
+
+    <!-- 족보 레벨 및 바우처 상시 확인 모달 -->
+    <div id="handsVouchersModal" class="modal-backdrop">
+      <div class="modal-board" style="max-width:680px;">
+        <h2 style="font-family:'Press Start 2P', cursive; color:#f1e05a; font-size:0.85rem; text-align:center;">족보 레벨 및 바우처 현황</h2>
+        
+        <div style="display:flex; gap:14px; margin-top:10px;">
+          <!-- 족보 레벨 목록 -->
+          <div style="flex:1; background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:10px;">
+            <div style="font-size:0.75rem; color:#58a6ff; font-weight:bold; margin-bottom:8px;">[족보 레벨]</div>
+            <div id="handsListContainer" style="display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto; font-size:0.7rem;"></div>
+          </div>
+          
+          <!-- 보유 바우처 목록 -->
+          <div style="flex:1; background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:10px;">
+            <div style="font-size:0.75rem; color:#8957e5; font-weight:bold; margin-bottom:8px;">[보유 바우처 영구 강화]</div>
+            <div id="vouchersListContainer" style="display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto; font-size:0.7rem;"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:center; margin-top:8px;">
+          <button id="btnCloseHandsVouchers" class="btn btn-reroll">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 덱 확인 모달 -->
+    <div id="deckModal" class="modal-backdrop">
+      <div class="modal-board" style="max-width:580px;">
+        <h2 style="font-family:'Press Start 2P', cursive; color:#58a6ff; font-size:0.85rem; text-align:center;">내 주사위 풀 (전체 덱)</h2>
+        <div id="deckListContainer" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; max-height:260px; overflow-y:auto; padding:8px;"></div>
+        <div style="display:flex; justify-content:center;">
+          <button id="btnCloseDeck" class="btn btn-reroll">닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ──────────────────────────────────────────────────
+    // [1] 사운드 엔진
+    // ──────────────────────────────────────────────────
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function playTone(freq, duration = 0.08, type = "square", endFreq = null) {
+      try {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+    const SFX = {
+      roll: () => playTone(300, 0.08, "triangle", 150),
+      lock: () => playTone(650, 0.05, "sine"),
+      mult: () => playTone(450, 0.12, "sawtooth", 900),
+      cash: () => { playTone(987, 0.08, "sine"); setTimeout(() => playTone(1318, 0.18, "sine"), 80); },
+      breakDie: () => playTone(120, 0.25, "sawtooth", 40),
+      tarotMode: () => { playTone(440, 0.2, "sine"); setTimeout(() => playTone(659, 0.3, "sine"), 120); },
+      upgrade: () => [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 0.1, "triangle"), i * 70))
+    };
+
+    // ──────────────────────────────────────────────────
+    // [2] 캔버스 적 몬스터 그래픽
+    // ──────────────────────────────────────────────────
+    const enemyCanvas = document.getElementById("enemyCanvas");
+    const ctx = enemyCanvas.getContext("2d");
+    let enemyTick = 0;
+    const ENEMIES = [
+      { name: "슬라임 다이스", color: "#2ea043", targetMultiplier: 1.0, draw: (ctx, t) => {
+        const b = Math.sin(t * 0.08) * 5;
+        ctx.fillStyle = "#2ea043"; ctx.beginPath(); ctx.ellipse(85, 85 + b, 48, 38, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(70, 75 + b, 8, 0, Math.PI*2); ctx.arc(100, 75 + b, 8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(72, 75 + b, 4, 0, Math.PI*2); ctx.arc(102, 75 + b, 4, 0, Math.PI*2); ctx.fill();
+      }},
+      { name: "황금 가고일", color: "#f1e05a", targetMultiplier: 1.9, draw: (ctx, t) => {
+        const h = Math.sin(t * 0.05) * 4;
+        ctx.fillStyle = "#f1e05a"; ctx.beginPath(); ctx.moveTo(85, 30+h); ctx.lineTo(125, 80+h); ctx.lineTo(85, 120+h); ctx.lineTo(45, 80+h); ctx.fill();
+        ctx.fillStyle = "#ff7b72"; ctx.fillRect(74, 70+h, 6, 6); ctx.fillRect(92, 70+h, 6, 6);
+      }},
+      { name: "카오스 아이", color: "#ff7b72", targetMultiplier: 3.0, draw: (ctx, t) => {
+        ctx.fillStyle = "#8a0e1a"; ctx.beginPath(); ctx.arc(85, 75, 36, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(85, 75, 22, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#ff7b72"; ctx.beginPath(); ctx.arc(85 + Math.cos(t*0.06)*5, 75 + Math.sin(t*0.06)*5, 10, 0, Math.PI*2); ctx.fill();
+      }}
+    ];
+    function animLoop() {
+      enemyTick++;
+      ctx.clearRect(0, 0, enemyCanvas.width, enemyCanvas.height);
+      const cur = ENEMIES[G.blindIndex % ENEMIES.length];
+      if (cur) cur.draw(ctx, enemyTick);
+      requestAnimationFrame(animLoop);
+    }
+
+    // ──────────────────────────────────────────────────
+    // [3] 시스템 정의: 족보, 행성, 바우처, 조커, 타로
+    // ──────────────────────────────────────────────────
+    const EDITIONS = {
+      base: { name: "Base", css: "", chipBonus: 0, multBonus: 0, multMultiplier: 1 },
+      foil: { name: "Foil", css: "edition-foil", chipBonus: 50, multBonus: 0, multMultiplier: 1 },
+      holo: { name: "Holographic", css: "edition-holo", chipBonus: 0, multBonus: 10, multMultiplier: 1 },
+      poly: { name: "Polychrome", css: "edition-poly", chipBonus: 0, multBonus: 0, multMultiplier: 1.5 },
+      negative: { name: "Negative", css: "edition-negative", chipBonus: 0, multBonus: 0, multMultiplier: 1 }
+    };
+
+    const POKER_HANDS = {
+      five_kind: { name: "파이브 다이스", level: 1, baseChips: 140, baseMult: 12, chipPerLvl: 35, multPerLvl: 3 },
+      four_kind: { name: "포 오브 카인드", level: 1, baseChips: 100, baseMult: 8, chipPerLvl: 30, multPerLvl: 2 },
+      full_house: { name: "풀 하우스", level: 1, baseChips: 70, baseMult: 6, chipPerLvl: 25, multPerLvl: 2 },
+      straight: { name: "라지 스트레이트", level: 1, baseChips: 80, baseMult: 7, chipPerLvl: 30, multPerLvl: 2 },
+      three_kind: { name: "트리플 다이스", level: 1, baseChips: 40, baseMult: 4, chipPerLvl: 20, multPerLvl: 1 },
+      two_pair: { name: "투 페어", level: 1, baseChips: 30, baseMult: 3, chipPerLvl: 15, multPerLvl: 1 },
+      one_pair: { name: "원 페어", level: 1, baseChips: 15, baseMult: 2, chipPerLvl: 10, multPerLvl: 1 },
+      high_dice: { name: "하이 다이스", level: 1, baseChips: 5, baseMult: 1, chipPerLvl: 5, multPerLvl: 1 }
+    };
+
+    const PLANET_CARDS = [
+      { id: "pl_jupiter", name: "목성 🪐", targetHand: "full_house", desc: "[풀 하우스] 레벨업 (+25 칩, +2 Mult)", cost: 3 },
+      { id: "pl_mars", name: "화성 🔴", targetHand: "four_kind", desc: "[포 오브 카인드] 레벨업 (+30 칩, +2 Mult)", cost: 3 },
+      { id: "pl_uranus", name: "천왕성 🌌", targetHand: "two_pair", desc: "[투 페어] 레벨업 (+15 칩, +1 Mult)", cost: 3 },
+      { id: "pl_venus", name: "금성 ✨", targetHand: "three_kind", desc: "[트리플] 레벨업 (+20 칩, +1 Mult)", cost: 3 },
+      { id: "pl_saturn", name: "토성 🪐", targetHand: "straight", desc: "[스트레이트] 레벨업 (+30 칩, +2 Mult)", cost: 3 }
+    ];
+
+    const VOUCHERS = [
+      { id: "v_joker_slot", name: "황금 벨트 🥊", desc: "조커 슬롯 영구 +1 확장", cost: 10, apply: () => { G.maxJokers++; } },
+      { id: "v_consumable_slot", name: "수정 보따리 🎒", desc: "소모품(타로) 슬롯 영구 +1 확장", cost: 8, apply: () => { G.maxConsumables++; } },
+      { id: "v_extra_hand", name: "초상화 🖼️", desc: "매 라운드 기본 굴림 횟수 영구 +1", cost: 10, apply: () => { G.baseHands++; } },
+      { id: "v_extra_reroll", name: "주사위 컵 🏺", desc: "매 라운드 기본 리롤 횟수 영구 +1", cost: 10, apply: () => { G.baseRerolls++; } },
+      { id: "v_clearance", name: "회원권 💳", desc: "상점의 모든 품목 가격 영구 -$1 할인", cost: 10, apply: () => { G.discount = Math.min(2, G.discount + 1); } }
+    ];
+
+    const JOKER_TEMPLATES = [
+      { id: "even_steven", emoji: "⚖️", title: "짝수 스티븐", desc: "짝수 주사위마다 +4 Mult", cost: 4, evalFn: (h, d) => ({ addChips: 0, addMult: d.filter(x => x.val % 2 === 0).length * 4, mulMult: 1 }) },
+      { id: "odd_todd", emoji: "🎲", title: "홀수 토드", desc: "홀수 주사위마다 +25 Chips", cost: 4, evalFn: (h, d) => ({ addChips: d.filter(x => x.val % 2 !== 0).length * 25, addMult: 0, mulMult: 1 }) },
+      { id: "snake_eyes", emoji: "🐍", title: "뱀의 눈", desc: "주사위 '1' 포함 시 최종 Mult × 1.5", cost: 6, evalFn: (h, d) => ({ addChips: 0, addMult: 0, mulMult: d.some(x => x.val === 1) ? 1.5 : 1 }) },
+      { id: "golden_goose", emoji: "🪿", title: "황금 거위", desc: "라운드 종료 시 이자 획득 (최대 +$5)", cost: 5, evalFn: () => ({ addChips: 0, addMult: 0, mulMult: 1 }), onRoundEnd: () => Math.min(5, Math.floor(G.gold / 5)) },
+      { id: "midas_touch", emoji: "🪙", title: "마이다스", desc: "제출 시 주사위 눈 총합에 비례해 캐시백", cost: 5, evalFn: () => ({ addChips: 0, addMult: 0, mulMult: 1 }), onPlay: (d) => Math.floor(d.reduce((a, b) => a + b.val, 0) / 6) },
+      { id: "bomb_maniac", emoji: "💣", title: "폭탄 광신도", desc: "유리 주사위 소멸할 때마다 영구 +4 Mult", cost: 5, bonusMult: 0, evalFn: function() { return { addChips: 0, addMult: this.bonusMult || 0, mulMult: 1 }; } },
+      { id: "heavy_roller", emoji: "🏋️", title: "헤비 롤러", desc: "주사위 눈 합이 20 이상이면 +80 Chips", cost: 4, evalFn: (h, d) => ({ addChips: d.reduce((a, b) => a + b.val, 0) >= 20 ? 80 : 0, addMult: 0, mulMult: 1 }) },
+      { id: "pair_maniac", emoji: "👥", title: "페어 광신도", desc: "페어 계열 족보 시 +8 Mult", cost: 5, evalFn: (h, d) => ({ addChips: 0, addMult: (h.name.includes("페어") || h.name.includes("트리플") || h.name.includes("풀")) ? 8 : 0, mulMult: 1 }) }
+    ];
+
+    const TAROT_CARDS = [
+      { id: "magician", name: "마법사 🪄", desc: "선택 주사위를 [황금 주사위]로 변환 (굴릴 때마다 +$3)", cost: 3, apply: (d) => { d.type = "gold"; } },
+      { id: "tower", name: "탑 💥", desc: "선택 주사위를 [영구 파괴] (덱 압축)", cost: 3, apply: (d) => { G.deck = G.deck.filter(item => item.uid !== d.uid); return "DESTROY"; } },
+      { id: "justice", name: "정의 ⚖️", desc: "선택 주사위를 [유리 주사위]로 변환 (×2 Mult, 1/4 파괴)", cost: 3, apply: (d) => { d.type = "glass"; } },
+      { id: "steel_body", name: "전차 🛡️", desc: "선택 주사위를 [강철 주사위]로 변환 (홀드 시 +50 칩)", cost: 3, apply: (d) => { d.type = "steel"; } },
+      { id: "star", name: "별 🌟", desc: "선택 주사위 눈을 영구 보정 (최솟값 3 보장)", cost: 3, apply: (d) => { d.minVal = 3; } }
+    ];
+
+    // 특수 덱빌딩 주사위 풀 대폭 확장
+    const DICE_TEMPLATES = [
+      { type: "normal", name: "일반 D6", desc: "표준 1~6 주사위", cost: 2, customSides: null },
+      { type: "gold", name: "황금 주사위", desc: "굴릴 때마다 +$3 영구 캐시백", cost: 4, customSides: null },
+      { type: "glass", name: "유리 주사위", desc: "점수 ×2 Mult, 1/4 확률 소멸", cost: 4, customSides: null },
+      { type: "steel", name: "강철 주사위", desc: "제출 시 홀드되어 있으면 +50 Chips", cost: 4, customSides: null },
+      { type: "lucky", name: "행운 주사위", desc: "1/5 확률로 +20 Mult 또는 +$15", cost: 5, customSides: null },
+      { type: "always6", name: "육각의 악마", desc: "희귀 주사위: 굴리면 무조건 '6'만 나옴", cost: 6, customSides: [6, 6, 6, 6, 6, 6] },
+      { type: "d20", name: "D20 크리티컬", desc: "초대형 다면체: 1~20 사이의 눈이 나옴", cost: 6, customSides: null, maxSides: 20 },
+      { type: "odd_only", name: "순수 홀수", desc: "오직 1, 3, 5 홀수 눈만 나옴", cost: 4, customSides: [1, 3, 5, 1, 3, 5] },
+      { type: "even_only", name: "순수 짝수", desc: "오직 2, 4, 6 짝수 눈만 나옴", cost: 4, customSides: [2, 4, 6, 2, 4, 6] }
+    ];
+
+    function makeDie(type = "normal", forcedEdition = null, customSides = null, maxSides = 6) {
+      let ed = "base";
+      if (forcedEdition !== null) {
+        ed = forcedEdition;
+      } else {
+        const rand = Math.random();
+        if (rand < 0.05) ed = "negative";
+        else if (rand < 0.15) ed = "poly";
+        else if (rand < 0.28) ed = "holo";
+        else if (rand < 0.45) ed = "foil";
+      }
+
+      let initialVal = 1;
+      if (customSides) {
+        initialVal = customSides[Math.floor(Math.random() * customSides.length)];
+      } else {
+        initialVal = Math.floor(Math.random() * maxSides) + 1;
+      }
+
+      return {
+        uid: "die_" + Math.random().toString(36).substr(2, 8),
+        val: initialVal,
+        type: type,
+        edition: ed,
+        minVal: 1,
+        maxSides: maxSides,
+        customSides: customSides
+      };
+    }
+
+    // ──────────────────────────────────────────────────
+    // [4] 게임 상태
+    // ──────────────────────────────────────────────────
+    const G = {
+      ante: 1,
+      blindIndex: 0,
+      targetScore: 400, // 주사위 눈 총합이 칩에 반영되므로 체력 밸런스 소폭 상향
+      currentScore: 0,
+      gold: 4,
+      baseHands: 3,
+      baseRerolls: 2,
+      handsLeft: 3,
+      rerollsLeft: 2,
+      shopRerollCost: 2,
+      discount: 0,
+      deck: [makeDie("normal", "base"), makeDie("normal", "base"), makeDie("normal", "base"), makeDie("normal", "base"), makeDie("normal", "base")],
+      currentHand: [],
+      locked: [false, false, false, false, false],
+      jokers: [],
+      maxJokers: 5,
+      consumables: [],
+      maxConsumables: 2,
+      acquiredVouchers: [],
+      activeTarotCard: null
+    };
+
+    function drawHandFromDeck() {
+      const shuffled = [...G.deck].sort(() => 0.5 - Math.random());
+      G.currentHand = shuffled.slice(0, 5);
+      while (G.currentHand.length < 5) {
+        G.currentHand.push(makeDie("normal", "base"));
+      }
+      G.locked = [false, false, false, false, false];
+    }
+
+    // 족보 평가: 족보 기본 칩 + 주사위 눈 총합이 칩에 정확히 반영
+    function evaluateDicePoker(hand) {
+      const counts = {};
+      hand.forEach(d => counts[d.val] = (counts[d.val] || 0) + 1);
+      const freq = Object.values(counts).sort((a, b) => b - a);
+      const uniqueSorted = [...new Set(hand.map(d => d.val))].sort((a, b) => a - b);
+      const sumPips = hand.reduce((a, b) => a + b.val, 0); // 주사위 눈 총합
+
+      let key = "high_dice";
+      if (freq[0] === 5) key = "five_kind";
+      else if (freq[0] === 4) key = "four_kind";
+      else if (freq[0] === 3 && freq[1] === 2) key = "full_house";
+      else if (uniqueSorted.length === 5 && (uniqueSorted[4] - uniqueSorted[0] === 4)) key = "straight";
+      else if (freq[0] === 3) key = "three_kind";
+      else if (freq[0] === 2 && freq[1] === 2) key = "two_pair";
+      else if (freq[0] === 2) key = "one_pair";
+
+      const h = POKER_HANDS[key];
+      // 주사위 눈 크기(sumPips)를 칩에 온전히 가산!
+      const chips = h.baseChips + (h.level - 1) * h.chipPerLvl + sumPips;
+      const mult = h.baseMult + (h.level - 1) * h.multPerLvl;
+
+      return { key, name: `${h.name} (Lv.${h.level})`, chips, mult, sumPips };
+    }
+
+    // ──────────────────────────────────────────────────
+    // [5] 툴팁 & 렌더링
+    // ──────────────────────────────────────────────────
+    const hoverTooltip = document.getElementById("hoverTooltip");
+    const ttTitle = document.getElementById("ttTitle");
+    const ttDesc = document.getElementById("ttDesc");
+    const ttEdition = document.getElementById("ttEdition");
+
+    function attachTooltip(element, title, desc, editionKey = "base") {
+      element.addEventListener("mouseenter", (e) => {
+        ttTitle.textContent = title;
+        ttDesc.textContent = desc;
+        if (editionKey && editionKey !== "base") {
+          const ed = EDITIONS[editionKey];
+          let b = `[${ed.name}] `;
+          if (ed.chipBonus) b += `+${ed.chipBonus} Chips `;
+          if (ed.multBonus) b += `+${ed.multBonus} Mult `;
+          if (ed.multMultiplier > 1) b += `×${ed.multMultiplier} Mult `;
+          if (editionKey === "negative") b += `슬롯 미차지 `;
+          ttEdition.textContent = b;
+          ttEdition.style.display = "block";
+        } else {
+          ttEdition.style.display = "none";
+        }
+        hoverTooltip.style.display = "block";
+      });
+
+      element.addEventListener("mousemove", (e) => {
+        hoverTooltip.style.left = `${e.clientX + 14}px`;
+        hoverTooltip.style.top = `${e.clientY + 14}px`;
+      });
+
+      element.addEventListener("mouseleave", () => {
+        hoverTooltip.style.display = "none";
+      });
+    }
+
+    const PIP_PATTERNS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+
+    function renderDiceUI() {
+      const tray = document.getElementById("diceTray");
+      tray.innerHTML = "";
+
+      G.currentHand.forEach((dieObj, i) => {
+        const slot = document.createElement("div");
+        slot.className = "die-slot";
+
+        const ed = EDITIONS[dieObj.edition] || EDITIONS.base;
+        const die = document.createElement("div");
+        die.className = `die ${G.locked[i] ? "locked" : ""} die-${dieObj.type} ${ed.css}`;
+        if (G.activeTarotCard) die.classList.add("tarot-targetable");
+        die.id = `die-${i}`;
+
+        // 6면체 이하 표준 점 표현 vs 7 이상 숫자 표현
+        if (dieObj.val <= 6 && PIP_PATTERNS[dieObj.val]) {
+          const pips = PIP_PATTERNS[dieObj.val] || [];
+          for (let p = 0; p < 9; p++) {
+            const pip = document.createElement("div");
+            pip.className = `pip ${pips.includes(p) ? "active" : ""}`;
+            die.appendChild(pip);
+          }
+        } else {
+          const numLabel = document.createElement("div");
+          numLabel.className = "die-center-num";
+          numLabel.textContent = dieObj.val;
+          die.appendChild(numLabel);
+        }
+
+        if (dieObj.edition !== "base") {
+          const tag = document.createElement("span");
+          tag.className = "edition-badge-tag";
+          tag.textContent = ed.name;
+          die.appendChild(tag);
+        }
+
+        attachTooltip(die, `주사위 #${i+1} [${dieObj.type}]`, `현재 눈: ${dieObj.val} (칩에 즉시 가산됨)`, dieObj.edition);
+
+        die.addEventListener("click", () => {
+          if (G.activeTarotCard) {
+            applyTarotToDie(i);
+            return;
+          }
+          G.locked[i] = !G.locked[i];
+          SFX.lock();
+          renderDiceUI();
+          updatePredictedScore();
+        });
+
+        const subText = document.createElement("span");
+        subText.style.fontSize = "0.65rem";
+        subText.style.color = G.locked[i] ? "#f1e05a" : "#8b949e";
+        subText.textContent = G.locked[i] ? "HOLD" : (dieObj.type === "normal" ? "ROLL" : `[${dieObj.type}]`);
+
+        slot.appendChild(die);
+        slot.appendChild(subText);
+        tray.appendChild(slot);
+      });
+    }
+
+    // 조커 미노출 버그 해결: 확실한 DOM 생성 및 바인딩
+    function renderJokersUI() {
+      const shelf = document.getElementById("jokerShelf");
+      if (!shelf) return;
+      shelf.innerHTML = "";
+      const extraSlots = G.jokers.filter(j => j.edition === "negative").length;
+      document.getElementById("jokerCountText").textContent = `${G.jokers.length}/${G.maxJokers + extraSlots}`;
+
+      G.jokers.forEach((joker, idx) => {
+        const ed = EDITIONS[joker.edition] || EDITIONS.base;
+        const cube = document.createElement("div");
+        cube.className = `joker-die-cube ${ed.css}`;
+        const sellVal = Math.max(1, Math.floor(joker.cost / 2));
+
+        cube.innerHTML = `
+          <button class="btn-sell-small" data-sell-joker="${idx}">$${sellVal}</button>
+          <div class="joker-icon-center">${joker.emoji}</div>
+          <div class="joker-mini-title">${joker.title}</div>
+          ${joker.edition !== "base" ? `<span class="edition-badge-tag">${ed.name}</span>` : ""}
+        `;
+
+        attachTooltip(cube, joker.title, joker.desc, joker.edition);
+
+        cube.querySelector(`[data-sell-joker="${idx}"]`).addEventListener("click", (e) => {
+          e.stopPropagation();
+          hoverTooltip.style.display = "none";
+          G.gold += sellVal;
+          G.jokers.splice(idx, 1);
+          SFX.cash();
+          renderJokersUI();
+          updateHUD();
+          updatePredictedScore();
+        });
+
+        shelf.appendChild(cube);
+      });
+    }
+
+    function renderConsumablesUI() {
+      const shelf = document.getElementById("consumableShelf");
+      if (!shelf) return;
+      shelf.innerHTML = "";
+      if (G.consumables.length === 0) {
+        shelf.innerHTML = `<div style="font-size:0.6rem; color:#6e40c9; text-align:center;">소모품 슬롯 (0/${G.maxConsumables})</div>`;
+        return;
+      }
+
+      G.consumables.forEach((item, idx) => {
+        const el = document.createElement("div");
+        const isPlanet = Boolean(item.targetHand);
+        el.className = `tarot-card ${isPlanet ? "planet-card" : ""}`;
+        el.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.5rem; color:#f1e05a;">${isPlanet ? 'PLANET' : 'TAROT'}</span>
+            <button class="btn-sell" style="padding:1px 3px;" data-sell-item="${idx}">$1</button>
+          </div>
+          <div style="font-size:0.6rem; font-weight:bold; color:${isPlanet ? '#58a6ff' : '#d2a8ff'};">${item.name}</div>
+          <button class="btn btn-reroll" style="font-size:0.5rem; padding:2px;" data-use-item="${idx}">사용</button>
+        `;
+
+        attachTooltip(el, item.name, item.desc);
+
+        el.querySelector(`[data-sell-item="${idx}"]`).addEventListener("click", (e) => {
+          e.stopPropagation();
+          hoverTooltip.style.display = "none";
+          G.gold += 1;
+          G.consumables.splice(idx, 1);
+          SFX.cash();
+          renderConsumablesUI();
+          updateHUD();
+        });
+
+        el.querySelector(`[data-use-item="${idx}"]`).addEventListener("click", (e) => {
+          e.stopPropagation();
+          hoverTooltip.style.display = "none";
+          useConsumable(idx);
+        });
+
+        shelf.appendChild(el);
+      });
+    }
+
+    function useConsumable(idx) {
+      const item = G.consumables[idx];
+
+      if (item.targetHand) {
+        const h = POKER_HANDS[item.targetHand];
+        h.level += 1;
+        SFX.upgrade();
+        G.consumables.splice(idx, 1);
+        renderConsumablesUI();
+        updatePredictedScore();
+        alert(`🌟 [${h.name}] 족보 레벨이 ${h.level}로 올랐습니다!`);
+        return;
+      }
+
+      if (G.currentHand.length === 0) {
+        drawHandFromDeck();
+      }
+
+      G.activeTarotCard = { index: idx, data: item };
+      SFX.tarotMode();
+
+      document.getElementById("gameCabinet").classList.add("purple-aura-active");
+      document.getElementById("tarotTargetBanner").style.display = "flex";
+      document.getElementById("tarotBannerText").textContent = `[${item.name}] 적용할 주사위를 클릭하세요!`;
+
+      document.getElementById("shopModal").style.display = "none";
+      document.getElementById("btnToggleShopFloat").style.display = "block";
+
+      renderDiceUI();
+    }
+
+    function applyTarotToDie(dieIndex) {
+      if (!G.activeTarotCard) return;
+      const targetDie = G.currentHand[dieIndex];
+      const res = G.activeTarotCard.data.apply(targetDie);
+
+      if (res === "DESTROY") {
+        G.currentHand.splice(dieIndex, 1);
+        while (G.currentHand.length < 5) G.currentHand.push(makeDie("normal", "base"));
+      }
+
+      SFX.upgrade();
+      G.consumables.splice(G.activeTarotCard.index, 1);
+      cancelTarotMode();
+    }
+
+    function cancelTarotMode() {
+      G.activeTarotCard = null;
+      document.getElementById("gameCabinet").classList.remove("purple-aura-active");
+      document.getElementById("tarotTargetBanner").style.display = "none";
+      renderConsumablesUI();
+      renderDiceUI();
+      updatePredictedScore();
+      updateHUD();
+    }
+
+    document.getElementById("btnCancelTarot").addEventListener("click", cancelTarotMode);
+
+    function updatePredictedScore() {
+      const evalResult = evaluateDicePoker(G.currentHand);
+      let chips = evalResult.chips; // 이미 주사위 눈 총합이 가산되어 있음
+      let mult = evalResult.mult;
+      let mulMult = 1;
+
+      G.currentHand.forEach((d, i) => {
+        if (d.type === "glass") mulMult *= 2;
+        if (d.type === "steel" && G.locked[i]) chips += 50;
+
+        const dEd = EDITIONS[d.edition] || EDITIONS.base;
+        chips += dEd.chipBonus;
+        mult += dEd.multBonus;
+        mulMult *= dEd.multMultiplier;
+      });
+
+      G.jokers.forEach(j => {
+        const ed = EDITIONS[j.edition] || EDITIONS.base;
+        chips += ed.chipBonus;
+        mult += ed.multBonus;
+        mulMult *= ed.multMultiplier;
+
+        if (j.evalFn) {
+          const res = j.evalFn(evalResult, G.currentHand);
+          chips += res.addChips;
+          mult += res.addMult;
+          mulMult *= res.mulMult;
+        }
+      });
+      mult = Math.floor(mult * mulMult);
+
+      document.getElementById("handName").textContent = `${evalResult.name} (+눈 합 ${evalResult.sumPips})`;
+      document.getElementById("chipBadge").textContent = `${chips} CHIPS`;
+      document.getElementById("multBadge").textContent = `${mult} MULT`;
+      return { chips, mult, total: chips * mult };
+    }
+
+    function updateHUD() {
+      document.getElementById("anteText").textContent = `${G.ante}/8`;
+      document.getElementById("goldText").textContent = `$${G.gold}`;
+      document.getElementById("deckCountText").textContent = `${G.deck.length}개`;
+      document.getElementById("handsLeftText").textContent = G.handsLeft;
+      document.getElementById("rerollsLeftText").textContent = G.rerollsLeft;
+      document.getElementById("targetScoreText").textContent = G.targetScore.toLocaleString();
+      document.getElementById("currentScoreText").textContent = G.currentScore.toLocaleString();
+
+      const pct = Math.min(100, Math.floor((G.currentScore / G.targetScore) * 100));
+      document.getElementById("gaugeFill").style.width = `${pct}%`;
+
+      const enemy = ENEMIES[G.blindIndex % ENEMIES.length];
+      document.getElementById("stageBadge").textContent = enemy.name;
+      document.getElementById("stageBadge").style.background = enemy.color;
+
+      document.getElementById("btnReroll").disabled = (G.rerollsLeft <= 0 || G.activeTarotCard !== null);
+      document.getElementById("btnPlay").disabled = (G.handsLeft <= 0 || G.activeTarotCard !== null);
+      document.getElementById("btnShopReroll").textContent = `상점 리롤 ($${Math.max(1, G.shopRerollCost - G.discount)}) 🔄`;
+    }
+
+    // ──────────────────────────────────────────────────
+    // [6] 게임 플레이 액션
+    // ──────────────────────────────────────────────────
+    function rollDice(forceAll = false) {
+      SFX.roll();
+      for (let i = 0; i < G.currentHand.length; i++) {
+        if (forceAll || !G.locked[i]) {
+          const el = document.getElementById(`die-${i}`);
+          if (el) el.classList.add("rolling");
+          const d = G.currentHand[i];
+
+          if (d.customSides) {
+            d.val = d.customSides[Math.floor(Math.random() * d.customSides.length)];
+          } else {
+            const min = d.minVal || 1;
+            const sides = d.maxSides || 6;
+            d.val = Math.floor(Math.random() * (sides - min + 1)) + min;
+          }
+        }
+      }
+      setTimeout(() => {
+        renderDiceUI();
+        updatePredictedScore();
+      }, 350);
+    }
+
+    document.getElementById("btnReroll").addEventListener("click", () => {
+      if (G.rerollsLeft <= 0 || G.activeTarotCard) return;
+      G.rerollsLeft--;
+      updateHUD();
+      rollDice(false);
+    });
+
+    document.getElementById("btnPlay").addEventListener("click", () => {
+      if (G.handsLeft <= 0 || G.activeTarotCard) return;
+
+      const calc = updatePredictedScore();
+      G.handsLeft--;
+      document.getElementById("multBadge").classList.add("flame");
+      SFX.mult();
+
+      // 특수 주사위 캐시백
+      G.currentHand.forEach(d => {
+        if (d.type === "gold") G.gold += 3;
+        if (d.type === "lucky" && Math.random() < 0.2) {
+          G.gold += 15;
+          alert("🍀 행운 주사위 발동! +$15 획득!");
+        }
+      });
+      G.jokers.forEach(j => {
+        if (j.onPlay) G.gold += j.onPlay(G.currentHand);
+      });
+
+      setTimeout(() => {
+        document.getElementById("multBadge").classList.remove("flame");
+        G.currentScore += calc.total;
+
+        // 유리 주사위 파괴 체크
+        let broken = 0;
+        G.currentHand = G.currentHand.filter(d => {
+          if (d.type === "glass" && Math.random() < 0.25) {
+            broken++;
+            G.deck = G.deck.filter(item => item.uid !== d.uid);
+            return false;
+          }
+          return true;
+        });
+
+        if (broken > 0) {
+          SFX.breakDie();
+          alert(`💥 쩌적! 유리 주사위 ${broken}개가 산산조각나며 덱에서 영구 파괴되었습니다!`);
+          const bombJoker = G.jokers.find(j => j.id === "bomb_maniac");
+          if (bombJoker) bombJoker.bonusMult = (bombJoker.bonusMult || 0) + broken * 4;
+          while (G.currentHand.length < 5) G.currentHand.push(makeDie("normal", "base"));
+        }
+
+        updateHUD();
+
+        if (G.currentScore >= G.targetScore) {
+          setTimeout(onBlindClear, 500);
+        } else if (G.handsLeft <= 0) {
+          alert(`💀 게임 오버!\n도달 ANTE: ${G.ante}`);
+          resetRun();
+        } else {
+          G.locked = [false, false, false, false, false];
+          rollDice(true);
+        }
+      }, 400);
+    });
+
+    function onBlindClear() {
+      let interest = 0;
+      G.jokers.forEach(j => { if (j.onRoundEnd) interest += j.onRoundEnd(); });
+      G.gold += (3 + G.handsLeft + interest);
+      SFX.cash();
+      G.shopRerollCost = 2;
+      openShop();
+    }
+
+    // ──────────────────────────────────────────────────
+    // [7] 상점 시스템 (항상 조커 3 + 주사위 2 + 소모품 2 + 바우처 1)
+    // ──────────────────────────────────────────────────
+    function openShop() {
+      document.getElementById("shopModal").style.display = "flex";
+      document.getElementById("btnToggleShopFloat").style.display = "none";
+      populateShop();
+    }
+
+    function populateShop() {
+      document.getElementById("shopGoldText").textContent = `$${G.gold}`;
+      const grid = document.getElementById("shopItemsGrid");
+      grid.innerHTML = "";
+
+      // 1. 조커 3개
+      for (let i = 0; i < 3; i++) {
+        const base = JOKER_TEMPLATES[Math.floor(Math.random() * JOKER_TEMPLATES.length)];
+        const rand = Math.random();
+        let ed = "base";
+        if (rand < 0.05) ed = "negative";
+        else if (rand < 0.15) ed = "poly";
+        else if (rand < 0.28) ed = "holo";
+        else if (rand < 0.45) ed = "foil";
+        const jokerObj = { ...base, uid: "jk_" + Math.random().toString(36).substr(2, 6), edition: ed };
+        const cost = Math.max(1, jokerObj.cost - G.discount);
+
+        grid.appendChild(createShopCard(jokerObj.emoji, jokerObj.title, jokerObj.desc, cost, `[조커:${EDITIONS[ed].name}]`, ed, () => {
+          let extra = G.jokers.filter(x => x.edition === "negative").length;
+          if (G.jokers.length >= (G.maxJokers + extra)) return alert("조커 슬롯이 가득 찼습니다! 기존 조커를 판매하세요.");
+          G.jokers.push(jokerObj);
+          renderJokersUI(); // 조커 선반 즉각 반영
+        }));
+      }
+
+      // 2. 특수 주사위 2개 (다양한 덱빌딩 주사위)
+      for (let i = 0; i < 2; i++) {
+        const dTemplate = DICE_TEMPLATES[Math.floor(Math.random() * DICE_TEMPLATES.length)];
+        const dieInstance = makeDie(dTemplate.type, null, dTemplate.customSides, dTemplate.maxSides || 6);
+        const ed = EDITIONS[dieInstance.edition] || EDITIONS.base;
+        const cost = Math.max(1, dTemplate.cost - G.discount);
+
+        grid.appendChild(createShopCard("🎲", dTemplate.name, dTemplate.desc, cost, `[주사위:${ed.name}]`, dieInstance.edition, () => {
+          G.deck.push(dieInstance);
+          updateHUD();
+        }));
+      }
+
+      // 3. 소모품 (행성 or 타로) 2개
+      for (let i = 0; i < 2; i++) {
+        const isPlanet = Math.random() < 0.5;
+        const item = isPlanet 
+          ? PLANET_CARDS[Math.floor(Math.random() * PLANET_CARDS.length)]
+          : TAROT_CARDS[Math.floor(Math.random() * TAROT_CARDS.length)];
+        const cost = Math.max(1, item.cost - G.discount);
+
+        grid.appendChild(createShopCard(isPlanet ? "🪐" : "🔮", item.name, item.desc, cost, isPlanet ? "[행성:레벨업]" : "[타로:변환]", "base", () => {
+          if (G.consumables.length >= G.maxConsumables) return alert("소모품 슬롯이 가득 찼습니다!");
+          G.consumables.push(item);
+          renderConsumablesUI();
+        }));
+      }
+
+      // 4. 영구 강화 티켓 (바우처) 1개
+      const availableVouchers = VOUCHERS.filter(v => !G.acquiredVouchers.includes(v.id));
+      if (availableVouchers.length > 0) {
+        const voucher = availableVouchers[Math.floor(Math.random() * availableVouchers.length)];
+        const vCost = Math.max(1, voucher.cost - G.discount);
+        grid.appendChild(createShopCard("🎟️", voucher.name, voucher.desc, vCost, "[영구 바우처]", "foil", () => {
+          voucher.apply();
+          G.acquiredVouchers.push(voucher.id);
+          SFX.upgrade();
+          alert(`🎉 영구 바우처 적용: [${voucher.name}] - ${voucher.desc}`);
+          renderJokersUI();
+          renderConsumablesUI();
+          updateHUD();
+        }));
+      }
+    }
+
+    function createShopCard(icon, title, desc, cost, tagText, editionKey, onBuy) {
+      const card = document.createElement("div");
+      const ed = EDITIONS[editionKey] || EDITIONS.base;
+      card.className = `shop-item-card ${ed.css}`;
+      card.innerHTML = `
+        <div>
+          <div style="font-size:1.2rem;">${icon}</div>
+          <div style="font-family:'Press Start 2P', cursive; font-size:0.62rem; color:#58a6ff; margin:4px 0;">${title}</div>
+          <div style="font-size:0.58rem; color:#8b949e; line-height:1.2;">${desc}</div>
+          <div style="font-size:0.52rem; color:#f1e05a; margin-top:3px;">${tagText}</div>
+        </div>
+        <button class="btn btn-reroll" style="font-size:0.6rem; padding:5px;">구매 ($${cost})</button>
+      `;
+
+      const btn = card.querySelector("button");
+      btn.addEventListener("click", () => {
+        if (G.gold < cost) return alert("골드가 부족합니다!");
+        G.gold -= cost;
+        SFX.cash();
+        document.getElementById("shopGoldText").textContent = `$${G.gold}`;
+        updateHUD();
+        btn.disabled = true;
+        btn.textContent = "보유중";
+        onBuy();
+      });
+      return card;
+    }
+
+    document.getElementById("btnShopReroll").addEventListener("click", () => {
+      const realCost = Math.max(1, G.shopRerollCost - G.discount);
+      if (G.gold < realCost) return alert("리롤 골드가 부족합니다!");
+      G.gold -= realCost;
+      G.shopRerollCost += 1;
+      SFX.roll();
+      populateShop();
+      updateHUD();
+    });
+
+    document.getElementById("btnMinimizeShop").addEventListener("click", () => {
+      document.getElementById("shopModal").style.display = "none";
+      document.getElementById("btnToggleShopFloat").style.display = "block";
+    });
+    document.getElementById("btnToggleShopFloat").addEventListener("click", () => {
+      document.getElementById("shopModal").style.display = "flex";
+      document.getElementById("btnToggleShopFloat").style.display = "none";
+      document.getElementById("shopGoldText").textContent = `$${G.gold}`;
+    });
+
+    document.getElementById("btnNextRound").addEventListener("click", () => {
+      document.getElementById("shopModal").style.display = "none";
+      document.getElementById("btnToggleShopFloat").style.display = "none";
+      G.blindIndex++;
+      if (G.blindIndex % 3 === 0) G.ante++;
+
+      const baseTarget = 400 * Math.pow(1.65, G.ante - 1);
+      const enemy = ENEMIES[G.blindIndex % ENEMIES.length];
+      G.targetScore = Math.floor(baseTarget * enemy.targetMultiplier);
+
+      G.currentScore = 0;
+      G.handsLeft = G.baseHands;
+      G.rerollsLeft = G.baseRerolls;
+
+      drawHandFromDeck();
+      renderJokersUI();
+      updateHUD();
+      rollDice(true);
+    });
+
+    // 족보 및 바우처 상시 확인 모달
+    document.getElementById("btnViewHandsAndVouchers").addEventListener("click", () => {
+      const hContainer = document.getElementById("handsListContainer");
+      hContainer.innerHTML = "";
+      Object.entries(POKER_HANDS).forEach(([k, h]) => {
+        const item = document.createElement("div");
+        item.style.padding = "4px 6px";
+        item.style.background = "#161b22";
+        item.style.borderRadius = "4px";
+        const c = h.baseChips + (h.level - 1) * h.chipPerLvl;
+        const m = h.baseMult + (h.level - 1) * h.multPerLvl;
+        item.innerHTML = `<strong>${h.name}</strong> (Lv.${h.level})<br><span style="color:#58a6ff;">${c} Chips</span> × <span style="color:#ff7b72;">${m} Mult</span>`;
+        hContainer.appendChild(item);
+      });
+
+      const vContainer = document.getElementById("vouchersListContainer");
+      vContainer.innerHTML = "";
+      if (G.acquiredVouchers.length === 0) {
+        vContainer.innerHTML = "<span style='color:#8b949e;'>보유한 바우처가 없습니다.</span>";
+      } else {
+        G.acquiredVouchers.forEach(vid => {
+          const v = VOUCHERS.find(item => item.id === vid);
+          if (v) {
+            const el = document.createElement("div");
+            el.style.padding = "4px 6px";
+            el.style.background = "#161b22";
+            el.style.borderRadius = "4px";
+            el.innerHTML = `<strong style="color:#f1e05a;">${v.name}</strong><br><span style="color:#8b949e;">${v.desc}</span>`;
+            vContainer.appendChild(el);
+          }
+        });
+      }
+
+      document.getElementById("handsVouchersModal").style.display = "flex";
+    });
+    document.getElementById("btnCloseHandsVouchers").addEventListener("click", () => {
+      document.getElementById("handsVouchersModal").style.display = "none";
+    });
+
+    // 덱 확인 모달
+    document.getElementById("btnViewDeck").addEventListener("click", () => {
+      const container = document.getElementById("deckListContainer");
+      container.innerHTML = "";
+      G.deck.forEach((d, i) => {
+        const item = document.createElement("div");
+        const ed = EDITIONS[d.edition] || EDITIONS.base;
+        item.className = ed.css;
+        item.style.background = "#21262d";
+        item.style.padding = "6px";
+        item.style.borderRadius = "4px";
+        item.style.textAlign = "center";
+        item.style.fontSize = "0.62rem";
+        item.innerHTML = `🎲#${i+1}<br><span style="color:#f1e05a;">[${d.type}]</span><br><span style="color:#58a6ff;">${ed.name}</span>`;
+        container.appendChild(item);
+      });
+      document.getElementById("deckModal").style.display = "flex";
+    });
+    document.getElementById("btnCloseDeck").addEventListener("click", () => {
+      document.getElementById("deckModal").style.display = "none";
+    });
+
+    function resetRun() {
+      G.ante = 1;
+      G.blindIndex = 0;
+      G.targetScore = 400;
+      G.currentScore = 0;
+      G.gold = 4;
+      G.baseHands = 3;
+      G.baseRerolls = 2;
+      G.handsLeft = 3;
+      G.rerollsLeft = 2;
+      G.shopRerollCost = 2;
+      G.discount = 0;
+      G.maxJokers = 5;
+      G.maxConsumables = 2;
+      G.acquiredVouchers = [];
+
+      Object.keys(POKER_HANDS).forEach(k => POKER_HANDS[k].level = 1);
+
+      G.deck = [makeDie("normal", "base"), makeDie("normal", "base"), makeDie("normal", "base"), makeDie("normal", "base"), makeDie("normal", "base")];
+      G.jokers = [];
+      G.consumables = [];
+      G.activeTarotCard = null;
+
+      cancelTarotMode();
+      renderJokersUI();
+      renderConsumablesUI();
+      drawHandFromDeck();
+      updateHUD();
+      rollDice(true);
+    }
+
+    // 초기 실행
+    drawHandFromDeck();
+    renderDiceUI();
+    renderJokersUI();
+    renderConsumablesUI();
+    updateHUD();
+    animLoop();
+    rollDice(true);
+  </script>
+</body>
+</html>
