@@ -23,6 +23,16 @@
       overflow-x: hidden;
     }
 
+    .crt-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  radial-gradient(circle, rgba(0,0,0,0) 65%, rgba(0,0,0,0.75) 100%);
+      background-size: 100% 4px, 100% 100%;
+      pointer-events: none;
+      z-index: 300;
+    }
+
     .mine-cabinet {
       width: 100%;
       max-width: 1140px;
@@ -294,6 +304,7 @@
       flex-shrink: 0;
       box-shadow: 0 4px 8px rgba(0,0,0,0.7);
       transition: transform 0.15s, border-color 0.15s;
+      position: relative;
     }
     .card:hover { transform: translateY(-4px); border-color: #ffd978; }
     .card.selected {
@@ -490,7 +501,7 @@
       </div>
     </div>
 
-    <!-- 카드 클릭 시 액션 선택 모달 (화면 중앙 확실 노출) -->
+    <!-- 카드 클릭 시 액션 선택 모달 -->
     <div id="cardActionBackdrop" class="modal-backdrop">
       <div class="modal-box" style="max-width:320px;">
         <h3 id="cardActionModalTitle">카드 행동 선택</h3>
@@ -653,7 +664,7 @@
       return nuggets.sort(() => 0.5 - Math.random());
     }
 
-    // [3] 세션 & 유저
+    // [3] 세션 & 유저 관리
     let myUid = localStorage.getItem("saboteur_uid") || ("u_" + Math.random().toString(36).substr(2, 7));
     let myName = localStorage.getItem("saboteur_nickname") || ("광부_" + myUid.substr(2, 4));
     let mySession = Date.now() + "_" + Math.random().toString(36).substr(2, 6);
@@ -819,7 +830,7 @@
       if (confirm("정말 갱도에서 나가시겠습니까?")) leaveRoom();
     });
 
-    // [5] 룸 동기화
+    // [5] 룸 동기화 리스너
     function listenRoom(rId) {
       onValue(ref(db, `saboteur_rooms/${rId}`), snap => {
         roomData = snap.val();
@@ -840,12 +851,13 @@
       document.getElementById("room-title-label").textContent = roomData.title;
       document.getElementById("round-indicator").textContent = `ROUND ${roomData.currentRound || 1}/3`;
 
-      // 대기실
+      // 1. 대기실 상태
       if (roomData.status === "WAITING") {
         document.getElementById("waiting-panel").style.display = "flex";
         document.getElementById("role-badge").style.display = "none";
         document.getElementById("turn-badge").textContent = "대기중";
         document.getElementById("deck-remain-text").textContent = "-";
+        document.getElementById("roundResultModal").style.display = "none";
 
         const chipsEl = document.getElementById("waiting-player-chips");
         chipsEl.innerHTML = "";
@@ -881,13 +893,19 @@
         return;
       }
 
-      // 인게임
+      // 2. 인게임 상태 (다음 라운드로 넘어가면 결과 모달 자동 닫힘)
+      if (roomData.status === "PLAYING") {
+        document.getElementById("roundResultModal").style.display = "none";
+        document.getElementById("cardActionBackdrop").style.display = "none";
+      }
+
       document.getElementById("waiting-panel").style.display = "none";
 
       renderPlayerSidebar();
       renderHandTray();
       renderGameBoard();
 
+      // 3. 라운드 종료 상태
       if (roomData.status === "FINISHED") {
         showRoundOrFinalResult();
       }
@@ -940,6 +958,11 @@
         hands[uid] = fullDeck.splice(0, handSize);
       });
 
+      selectedCardIdx = null;
+      selectedCardRotation = 0;
+      tentativeAction = null;
+      isPlacementMode = false;
+
       const updates = {
         status: "PLAYING",
         currentRound: roundNum,
@@ -947,7 +970,7 @@
         deck: fullDeck,
         hands: hands,
         roles: roles,
-        playerOrder: order, // 순서 배열 저장
+        playerOrder: order,
         turnIdx: 0,
         tools: tools,
         winner: null,
@@ -994,7 +1017,7 @@
       return { ...tile, t: tile.b, b: tile.t, l: tile.r, r: tile.l };
     }
 
-    // BFS로 출발지(2,0)로부터 끊김 없이 이어져 있는지 검사
+    // BFS 탐색: 출발지(2,0)로부터 끊김 없이 이어져 있는지 검사
     function isConnectedToStartByPath(virtualGrid, targetR, targetC) {
       const queue = [{ r: 2, c: 0 }];
       const visited = new Set(["2_0"]);
@@ -1035,7 +1058,7 @@
       return false;
     }
 
-    // 길 타일 유효성 검사 (4방향 통로 일치 + 출발점 연결)
+    // 길 타일 배치 검증
     function canPlaceTile(grid, r, c, tile) {
       if (grid && grid[`${r}_${c}`]) return false;
 
@@ -1078,14 +1101,11 @@
       return isConnectedToStartByPath(virtualGrid, r, c);
     }
 
-    // ──────────────────────────────────────────────────
-    // [7] 보드 인터랙션 & 핸드 제어 (턴 판정 완벽 수정)
-    // ──────────────────────────────────────────────────
+    // [7] 보드 인터랙션 & 핸드 제어
     const mineGridEl = document.getElementById("mineGrid");
     const handTrayEl = document.getElementById("handTray");
     const pListEl = document.getElementById("p-list");
 
-    // 안전한 턴 판정 함수 (배열/객체 인덱스 불일치 원천 해결)
     function checkIsMyTurn() {
       if (!roomData || !roomData.playerOrder) return false;
       const order = Array.isArray(roomData.playerOrder) 
@@ -1134,7 +1154,6 @@
               cell.onclick = () => setupMap(tile);
             }
           } else {
-            // 길 타일 배치 가이드 (선택된 카드가 있고 사용 모드일 때)
             if (!hasTentative && isMyTurn && myCard?.kind === "path" && isPlacementMode && !isAnyToolBroken) {
               const rotated = getRotatedTile(myCard, selectedCardRotation);
               if (canPlaceTile(displayGrid, r, c, rotated)) {
@@ -1179,7 +1198,6 @@
           <div class="card-label">${card.name}</div>
         `;
 
-        // 카드 클릭 시 100% 모달 팝업 오픈
         cardEl.onclick = (e) => {
           e.stopPropagation();
 
@@ -1199,7 +1217,6 @@
           renderHandTray();
           renderGameBoard();
 
-          // 중앙 팝업 모달 오픈
           openCardActionModal(card);
         };
 
@@ -1209,7 +1226,6 @@
       updateTurnButtons();
     }
 
-    // 카드 액션 모달 오픈
     function openCardActionModal(card) {
       const modal = document.getElementById("cardActionBackdrop");
       document.getElementById("cardActionModalTitle").textContent = card.name;
@@ -1343,10 +1359,10 @@
       const virtualGrid = { ...roomData.grid, [`${r}_${c}`]: tile };
 
       const dirs = [
-        { r: r-1, c: c, me: 't' },
-        { r: r+1, c: c, me: 'b' },
-        { r: r, c: c-1, me: 'l' },
-        { r: r, c: c+1, me: 'r' }
+        { r: r-1, c: c, me: 't', opp: 'b' },
+        { r: r+1, c: c, me: 'b', opp: 't' },
+        { r: r, c: c-1, me: 'l', opp: 'r' },
+        { r: r, c: c+1, me: 'r', opp: 'l' }
       ];
 
       for (const d of dirs) {
@@ -1528,7 +1544,7 @@
       document.getElementById("deck-remain-text").textContent = `${(roomData.deck || []).length}장`;
     }
 
-    // [8] 3라운드 매치 결과
+    // [8] 3라운드 매치 결과 & 금덩이 분배
     async function showRoundOrFinalResult() {
       const modal = document.getElementById("roundResultModal");
       const titleEl = document.getElementById("resultTitle");
