@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>행운 원기옥 (Luck Collector)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f172a; /* slate-900 */
+      color: white;
+      font-family: 'Pretendard', sans-serif;
+      overflow: hidden;
+      touch-action: none; /* 모바일에서 드래그 새로고침 방지 */
+    }
+    
+    /* 캔버스 이펙트를 위한 전체 화면 오버레이 */
+    #fx-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* 흔들림 애니메이션 (악마 괴롭힐 때) */
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg) scale(1); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg) scale(0.95); }
+      20% { transform: translate(-3px, 0px) rotate(1deg) scale(0.9); }
+      30% { transform: translate(3px, 2px) rotate(0deg) scale(0.95); }
+      40% { transform: translate(1px, -1px) rotate(1deg) scale(0.9); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg) scale(0.85); filter: hue-rotate(90deg) brightness(0.8) contrast(1.5); }
+      60% { transform: translate(-3px, 1px) rotate(0deg) scale(0.85); filter: hue-rotate(180deg) brightness(0.7) contrast(2); }
+      70% { transform: translate(3px, 1px) rotate(-1deg) scale(0.9); filter: hue-rotate(270deg) brightness(0.6) contrast(2.5); }
+      80% { transform: translate(-1px, -1px) rotate(1deg) scale(0.95); filter: hue-rotate(360deg) brightness(0.5) contrast(3); }
+      90% { transform: translate(1px, 2px) rotate(0deg) scale(1); filter: drop-shadow(0 0 20px red); }
+      100% { transform: translate(1px, -2px) rotate(-1deg) scale(0.8); filter: drop-shadow(0 0 40px red) brightness(0.3); }
+    }
+    .shaking {
+      animation: shake 0.5s infinite;
+    }
+
+    /* 영롱한 행운 볼 애니메이션 */
+    @keyframes glow {
+      0% { box-shadow: 0 0 10px #8b5cf6, 0 0 20px #8b5cf6, inset 0 0 15px #c4b5fd; }
+      50% { box-shadow: 0 0 20px #a78bfa, 0 0 40px #a78bfa, inset 0 0 25px #ddd6fe; }
+      100% { box-shadow: 0 0 10px #8b5cf6, 0 0 20px #8b5cf6, inset 0 0 15px #c4b5fd; }
+    }
+    .luck-ball {
+      background: radial-gradient(circle, #ddd6fe 0%, #8b5cf6 50%, #4c1d95 100%);
+      border-radius: 50%;
+      animation: glow 3s infinite alternate;
+      transition: all 0.5s ease-out;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      padding: 2rem;
+      box-sizing: border-box;
+      align-items: center;
+      justify-content: center;
+    }
+    .screen.active {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="fx-canvas"></canvas>
+
+  <!-- [1] 메인 화면 -->
+  <div id="screen-main" class="screen active relative">
+    <h1 class="text-3xl font-bold text-purple-400 mb-2">행운 원기옥</h1>
+    <p class="text-slate-400 mb-8 text-sm">불운을 모아 행운으로 터트리세요</p>
+
+    <!-- 위로 멘트 (포인트에 따라 변경) -->
+    <div id="message-container" class="h-16 mb-4 flex items-center justify-center text-center px-4 text-purple-200 min-h-[4rem]">
+      <!-- 멘트가 JS로 주입됩니다 -->
+    </div>
+
+    <!-- 행운 볼 -->
+    <div class="relative w-64 h-64 flex items-center justify-center mb-10">
+      <div id="luck-ball-element" class="luck-ball w-12 h-12 flex items-center justify-center">
+        <span id="points-display" class="font-bold text-white drop-shadow-md">0</span>
+      </div>
+    </div>
+
+    <!-- 버튼들 -->
+    <div class="flex gap-4 w-full max-w-sm">
+      <button onclick="switchScreen('screen-devil')" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 rounded-xl font-bold text-lg shadow-[0_0_15px_rgba(220,38,38,0.5)] transition active:scale-95">
+        😈 악마 괴롭히기<br/><span class="text-xs font-normal text-red-200">(불운 적립)</span>
+      </button>
+      <button onclick="switchScreen('screen-angel')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold text-lg shadow-[0_0_15px_rgba(5,150,105,0.5)] transition active:scale-95">
+        👼 포인트 청산하기<br/><span class="text-xs font-normal text-emerald-200">(행운 만끽)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- [2] 악마 괴롭히기 (불운 적립) 화면 -->
+  <div id="screen-devil" class="screen">
+    <button onclick="switchScreen('screen-main')" class="absolute top-6 left-6 text-slate-400 hover:text-white">◀ 뒤로가기</button>
+    
+    <h2 class="text-2xl font-bold text-red-400 mb-2">어떤 괴로운 일이 있었나요?</h2>
+    <p class="text-slate-400 mb-6 text-sm">무엇이 당신을 화나게 했는지 적어주세요.</p>
+    
+    <input type="text" id="devil-input" placeholder="예: 출근길 지하철을 눈앞에서 놓침" class="w-full max-w-sm px-4 py-3 rounded-lg bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-red-500 mb-10" />
+
+    <p class="text-red-300 font-bold mb-4 animate-pulse">👇 스트레스 받은 만큼 길게 누르세요 👇</p>
+    
+    <!-- 악마 버튼 -->
+    <div id="devil-btn" class="text-9xl cursor-pointer select-none transition-transform">
+      👿
+    </div>
+    
+    <p class="mt-8 text-slate-500">누르고 있으면 에너지가 쥐어짜집니다.</p>
+  </div>
+
+  <!-- [3] 포인트 청산 (천사 쓰다듬기) 화면 -->
+  <div id="screen-angel" class="screen">
+    <button onclick="switchScreen('screen-main')" class="absolute top-6 left-6 text-slate-400 hover:text-white">◀ 뒤로가기</button>
+    
+    <h2 class="text-2xl font-bold text-emerald-400 mb-2">어떤 기분 좋은 일이 있었나요?</h2>
+    <p class="text-slate-400 mb-6 text-sm">작은 행복이라도 좋아요. 기록해 주세요.</p>
+    
+    <input type="text" id="angel-input" placeholder="예: 우연히 들어간 카페의 커피가 맛있었음" class="w-full max-w-sm px-4 py-3 rounded-lg bg-slate-800 border border-slate-600 text-white focus:outline-none focus:border-emerald-500 mb-10" />
+
+    <p class="text-emerald-300 font-bold mb-4 animate-pulse">👇 기분 좋은 만큼 천사를 쓰다듬으세요 👇</p>
+    
+    <!-- 천사 영역 -->
+    <div id="angel-area" class="text-9xl cursor-pointer select-none">
+      👼
+    </div>
+    
+    <p class="mt-8 text-slate-500">좌우로 문질러서 포인트를 청산하세요.</p>
+  </div>
+
+
+  <script>
+    // 상태 변수
+    let points = parseInt(localStorage.getItem('luckCollector_points')) || 0;
+    let isPressingDevil = false;
+    let devilInterval;
+    
+    // DOM 요소
+    const pointsDisplay = document.getElementById('points-display');
+    const luckBall = document.getElementById('luck-ball-element');
+    const messageContainer = document.getElementById('message-container');
+    const devilBtn = document.getElementById('devil-btn');
+    const angelArea = document.getElementById('angel-area');
+    
+    // Canvas 설정
+    const canvas = document.getElementById('fx-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // 포인트 저장 및 화면 업데이트
+    function updatePoints() {
+      localStorage.setItem('luckCollector_points', points);
+      pointsDisplay.innerText = points;
+      
+      // 행운 볼 크기 조절 (기본 3rem(48px)에서 최대 16rem(256px)까지)
+      const minSize = 48;
+      const maxSize = 256;
+      // 20000 포인트에서 최대 크기가 되도록 설정
+      let size = minSize + (points / 20000) * (maxSize - minSize);
+      if(size > maxSize) size = maxSize;
+      
+      luckBall.style.width = `${size}px`;
+      luckBall.style.height = `${size}px`;
+
+      // 텍스트 크기도 비례해서 약간 키움
+      const fontSize = Math.min(1 + (points / 10000), 2.5);
+      pointsDisplay.style.fontSize = `${fontSize}rem`;
+
+      updateMessage();
+    }
+
+    // 단계별 위로 멘트 로직
+    function updateMessage() {
+      let message = "";
+      // 1단계 (1000 미만)은 멘트 생략
+      if (points >= 1000 && points < 5000) {
+        const msgs = [
+          "최근에 은근히 신경 쓰이고 지치는 일들이 있었죠? 이 구슬이 조만간 기분 좋은 일로 터질 준비를 하고 있어요.",
+          "일상의 작은 스크래치들이 모여 반짝이는 원기옥이 되고 있습니다. 오늘도 참 잘 견뎌냈어요."
+        ];
+        message = msgs[Math.floor(Math.random() * msgs.length)];
+      } else if (points >= 5000 && points < 10000) {
+        const msgs = [
+          "많이 힘들었죠? 꾹꾹 눌러 담은 당신의 인내가 이렇게 크고 영롱해졌습니다. 다 보상받을 거예요.",
+          "이만큼이나 묵묵히 버텨내다니, 당신은 정말 단단한 사람이에요. 다가올 큰 행운이 이 안에 응축되어 있습니다."
+        ];
+        message = msgs[Math.floor(Math.random() * msgs.length)];
+      } else if (points >= 10000) {
+        const msgs = [
+          "와... 이 정도면 우주가 당신에게 크게 빚을 졌네요. 조만간 인생의 장르가 사이다 코미디로 바뀔 차례입니다.",
+          "가장 짙은 어둠 뒤에 가장 밝은 빛이 오듯, 이 거대한 원기옥이 당신의 앞날을 환하게 비춰줄 거예요."
+        ];
+        message = msgs[Math.floor(Math.random() * msgs.length)];
+      }
+      messageContainer.innerText = message;
+    }
+
+    // 화면 전환
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+      if(screenId === 'screen-main') {
+        updatePoints();
+      }
+    }
+
+    /* -------------------------------------------
+       악마 괴롭히기 로직 (꾹 누르기)
+    ------------------------------------------- */
+    function startDevilSqueeze(e) {
+      if (isPressingDevil) return;
+      isPressingDevil = true;
+      devilBtn.classList.add('shaking');
+      
+      devilInterval = setInterval(() => {
+        points += 17; // 한 틱당 오르는 포인트
+        updatePoints();
+        // 햅틱 피드백 (모바일 지원시)
+        if(navigator.vibrate) navigator.vibrate(30);
+      }, 100);
+    }
+
+    function stopDevilSqueeze(e) {
+      if (!isPressingDevil) return;
+      isPressingDevil = false;
+      clearInterval(devilInterval);
+      devilBtn.classList.remove('shaking');
+      
+      // 원기옥 쪽으로 파티클 뱉어내기
+      const rect = devilBtn.getBoundingClientRect();
+      createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, 'red');
+      
+      // 짧고 강한 진동
+      if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
+    }
+
+    // 악마 이벤트 리스너 등록 (마우스 및 터치)
+    devilBtn.addEventListener('mousedown', startDevilSqueeze);
+    devilBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startDevilSqueeze(e); }, { passive: false });
+    
+    window.addEventListener('mouseup', stopDevilSqueeze);
+    window.addEventListener('touchend', stopDevilSqueeze);
+    devilBtn.addEventListener('mouseleave', stopDevilSqueeze);
+
+
+    /* -------------------------------------------
+       천사 쓰다듬기 로직 (문지르기)
+    ------------------------------------------- */
+    let lastX = null;
+    let lastY = null;
+    let rubDistance = 0;
+
+    function handleRubbing(clientX, clientY) {
+      if(points <= 0) return;
+
+      if(lastX !== null && lastY !== null) {
+        const dx = clientX - lastX;
+        const dy = clientY - lastY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        rubDistance += dist;
+
+        // 일정 거리 문지를 때마다 포인트 청산
+        if(rubDistance > 20) {
+          points -= 21; // 차감 속도
+          rubDistance = 0;
+          
+          if(points <= 0) {
+            points = 0;
+            // 축복 멘트 출력 및 모달/얼럿
+            alert("✨ 천사: 내 기도가 닿았구나! 정말 기뻐! 당신의 앞날에 축복이 가득하길! ✨");
+          }
+          
+          updatePoints();
+          // 부드러운 햅틱 (골골송 느낌)
+          if(navigator.vibrate) navigator.vibrate(10);
+          
+          // 빛 파티클 생성
+          const rect = angelArea.getBoundingClientRect();
+          createParticles(clientX, clientY, 'gold', 3);
+        }
+      }
+      lastX = clientX;
+      lastY = clientY;
+    }
+
+    // 마우스 이벤트
+    angelArea.addEventListener('mousemove', (e) => {
+      // 마우스 왼쪽 버튼을 누른 상태인지 확인
+      if(e.buttons === 1) handleRubbing(e.clientX, e.clientY);
+    });
+    angelArea.addEventListener('mouseleave', () => { lastX = null; lastY = null; });
+    angelArea.addEventListener('mouseup', () => { lastX = null; lastY = null; });
+
+    // 터치 이벤트
+    angelArea.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      handleRubbing(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+    angelArea.addEventListener('touchend', () => { lastX = null; lastY = null; });
+    
+
+    /* -------------------------------------------
+       파티클 물리 엔진 (Canvas)
+    ------------------------------------------- */
+    function createParticles(x, y, colorType, count = 15) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 10,
+          vy: (Math.random() - 0.5) * 10 - 5,
+          life: 1.0,
+          colorType: colorType
+        });
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        
+        // 이동 및 중력 적용
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.2; // 중력
+        p.life -= 0.02; // 수명 감소
+        
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        // 색상 설정
+        if (p.colorType === 'red') {
+          ctx.fillStyle = `rgba(239, 68, 68, ${p.life})`; // Tailwind red-500
+        } else if (p.colorType === 'gold') {
+          ctx.fillStyle = `rgba(252, 211, 77, ${p.life})`; // Tailwind yellow-300
+        }
+
+        // 파티클 그리기
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4 * p.life, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      requestAnimationFrame(animateParticles);
+    }
+    
+    // 초기화
+    updatePoints();
+    animateParticles();
+
+  </script>
+</body>
+</html>
