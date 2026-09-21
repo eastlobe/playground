@@ -17,7 +17,7 @@
       align-items: center;
       min-height: 100vh;
       min-height: 100dvh;
-      padding: 4px;
+      padding: 6px;
       overflow-x: hidden;
     }
 
@@ -33,7 +33,7 @@
 
     .game-cabinet {
       width: 100%;
-      max-width: 1080px;
+      max-width: 1100px;
       height: 96vh;
       height: 96dvh;
       background: #151821;
@@ -46,9 +46,9 @@
       overflow: hidden;
     }
 
-    /* 상단 탑바 */
-    .top-bar {
-      height: 54px;
+    /* 공통 헤더 */
+    header {
+      height: 52px;
       background: #0d1017;
       border-bottom: 2px solid #2e3440;
       display: flex;
@@ -64,16 +64,108 @@
       color: #f1e05a;
       letter-spacing: 1px;
     }
-    .game-stats {
+    .user-pill {
+      font-size: 0.8rem;
+      color: #8b949e;
       display: flex;
-      gap: 12px;
-      font-size: 0.75rem;
       align-items: center;
+      gap: 8px;
+    }
+
+    .view-section {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    .view-section.active {
+      display: flex;
+    }
+
+    /* 버튼 공통 */
+    .btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.6rem;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-action { background: #f1e05a; color: #000; }
+    .btn-danger { background: #da3633; color: #fff; }
+    .btn-primary { background: #2ea043; color: #fff; }
+    .btn-secondary { background: #2e3440; color: #fff; }
+
+    /* [뷰 1: 로비 화면] */
+    #view-lobby {
+      padding: 16px;
+      overflow-y: auto;
+      gap: 16px;
+    }
+    .panel-box {
+      background: #1c202a;
+      border: 1px solid #2e3440;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    input, select {
+      background: #0d1017;
+      border: 1px solid #3b4252;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #f1e05a; }
+
+    .room-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .room-item {
+      background: #1c202a;
+      border: 1px solid #2e3440;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .room-item:hover { border-color: #f1e05a; }
+
+    /* [뷰 2: 게임/대기실 룸] */
+    #view-room {
+      overflow: hidden;
+    }
+    .room-topbar {
+      height: 48px;
+      background: #11141c;
+      border-bottom: 1px solid #2e3440;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 14px;
+      flex-shrink: 0;
     }
     .badge {
       font-family: 'Press Start 2P', cursive;
       font-size: 0.55rem;
-      padding: 3px 6px;
+      padding: 4px 6px;
       border-radius: 4px;
     }
     .badge-miner { background: #2ea043; color: #fff; }
@@ -81,15 +173,42 @@
     .badge-turn { background: #f1e05a; color: #000; animation: pulse 1s infinite alternate; }
     @keyframes pulse { from { opacity: 0.7; } to { opacity: 1; } }
 
-    /* 메인 플레이 필드 */
-    .playfield {
+    /* 대기실 패널 */
+    #waiting-panel {
+      padding: 12px 16px;
+      background: #1a1e28;
+      border-bottom: 2px solid #2e3440;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .waiting-player-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .player-chip {
+      background: #11141c;
+      border: 1px solid #2e3440;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .player-chip.ready { border-color: #2ea043; color: #2ea043; }
+
+    /* 게임 보드 영역 */
+    .playfield-body {
       flex: 1;
       display: flex;
       overflow: hidden;
       position: relative;
     }
-
-    /* 좌측/상단: 광산 9x5 격자 보드판 */
     .board-container {
       flex: 1;
       display: flex;
@@ -98,12 +217,11 @@
       background: #090b10;
       overflow: auto;
       padding: 10px;
-      position: relative;
     }
     .mine-grid {
       display: grid;
-      grid-template-columns: repeat(9, clamp(42px, 5.5vw, 68px));
-      grid-template-rows: repeat(5, clamp(42px, 5.5vw, 68px));
+      grid-template-columns: repeat(9, clamp(44px, 5.8vw, 68px));
+      grid-template-rows: repeat(5, clamp(44px, 5.8vw, 68px));
       gap: 3px;
       background: #1c202a;
       padding: 6px;
@@ -123,19 +241,22 @@
     }
     .grid-cell.highlight-valid {
       outline: 2px dashed #2ea043;
-      background: rgba(46, 160, 67, 0.15);
+      background: rgba(46, 160, 67, 0.25);
       cursor: crosshair;
     }
     .grid-cell.highlight-rockfall {
       outline: 2px dashed #da3633;
-      background: rgba(218, 54, 51, 0.2);
+      background: rgba(218, 54, 51, 0.25);
     }
     .grid-cell.highlight-map {
       outline: 2px dashed #58a6ff;
-      background: rgba(88, 166, 255, 0.2);
+      background: rgba(88, 166, 255, 0.25);
+    }
+    .grid-cell.tentative-tile {
+      outline: 2px solid #f1e05a;
+      filter: brightness(1.2);
     }
 
-    /* 타일 그래픽 (SVG 인라인 렌더링) */
     .tile-svg {
       width: 100%;
       height: 100%;
@@ -143,22 +264,22 @@
       pointer-events: none;
     }
 
-    /* 우측: 플레이어 리스트 및 덱 정보 */
+    /* 우측 사이드바 */
     .sidebar {
-      width: 250px;
+      width: 240px;
       background: #0d1017;
       border-left: 2px solid #2e3440;
       display: flex;
       flex-direction: column;
       padding: 10px;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
     }
     .players-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      max-height: 200px;
+      gap: 5px;
+      max-height: 190px;
       overflow-y: auto;
     }
     .player-row {
@@ -176,14 +297,14 @@
       background: #252212;
     }
 
-    /* 하단: 내 패 (Hand) & 액션 컨트롤 바 */
+    /* 하단 패 & 액션 컨트롤 바 */
     .bottom-deck {
-      height: 140px;
+      height: 135px;
       background: #0d1017;
       border-top: 2px solid #2e3440;
       display: flex;
-      padding: 8px 14px;
-      gap: 12px;
+      padding: 6px 12px;
+      gap: 10px;
       align-items: center;
       flex-shrink: 0;
     }
@@ -194,10 +315,10 @@
       overflow-x: auto;
       height: 100%;
       align-items: center;
-      padding-bottom: 4px;
+      padding-bottom: 2px;
     }
     .card-item {
-      width: 76px;
+      width: 74px;
       height: 108px;
       background: #1a1e29;
       border: 2px solid #3b4252;
@@ -217,9 +338,13 @@
       transform: translateY(-8px);
       box-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
     }
+    .card-item.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
     .card-preview {
-      width: 54px;
-      height: 54px;
+      width: 52px;
+      height: 52px;
       background: #11141c;
       border-radius: 4px;
       display: flex;
@@ -231,24 +356,18 @@
       font-weight: bold;
       text-align: center;
       color: #e2e8f0;
+      line-height: 1.2;
     }
 
-    .btn {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 0.65rem;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+    .action-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 140px;
+      flex-shrink: 0;
     }
-    .btn:active { transform: scale(0.96); }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .btn-action { background: #f1e05a; color: #000; }
-    .btn-discard { background: #da3633; color: #fff; }
-    .btn-start { background: #2ea043; color: #fff; }
 
-    /* 모달 */
+    /* 모달 공통 */
     .modal-backdrop {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -262,7 +381,7 @@
     }
     .modal-box {
       width: 100%;
-      max-width: 440px;
+      max-width: 420px;
       background: #161b24;
       border: 3px solid #f1e05a;
       border-radius: 12px;
@@ -273,15 +392,14 @@
       text-align: center;
     }
 
-    /* 모바일 분기 */
     @media (max-width: 860px) {
       .game-cabinet { height: 100vh; height: 100dvh; border: none; border-radius: 0; }
-      .sidebar { display: none; } /* 모바일에서는 하단 팝업이나 간소화 */
-      .top-bar { height: 48px; padding: 4px 8px; }
-      .brand-title { font-size: 0.7rem; }
-      .bottom-deck { height: 110px; padding: 4px 8px; }
-      .card-item { width: 62px; height: 92px; }
-      .card-preview { width: 44px; height: 44px; }
+      .sidebar { display: none; }
+      .bottom-deck { height: 116px; padding: 4px 6px; gap: 6px; }
+      .card-item { width: 58px; height: 96px; }
+      .card-preview { width: 40px; height: 40px; }
+      .action-controls { min-width: 110px; }
+      .btn { font-size: 0.5rem; padding: 6px 6px; }
     }
   </style>
 </head>
@@ -290,79 +408,116 @@
   <div class="crt-overlay"></div>
 
   <div class="game-cabinet">
-    <!-- 상단 바 -->
-    <div class="top-bar">
+    <header>
       <div class="brand-title">SABOTEUR ⛏️</div>
-      <div class="game-stats">
-        <span id="roleBadge" class="badge" style="display:none;">역할</span>
-        <span>남은 덱: <strong id="deckRemainText" style="color:#58a6ff;">-</strong>장</span>
-        <span id="turnIndicator" class="badge badge-turn" style="display:none;">내 턴!</span>
+      <div class="user-pill">
+        <span id="user-display-name">광부</span>
+        <button id="btn-change-nickname" class="btn btn-secondary" style="padding:4px 8px; font-size:0.5rem;">닉네임 변경</button>
       </div>
-    </div>
+    </header>
 
-    <!-- 플레이 필드 -->
-    <div class="playfield">
-      <!-- 9x5 격자 보드판 -->
-      <div class="board-container">
-        <div id="mineGrid" class="mine-grid"></div>
+    <!-- [뷰 1: 로비 화면] -->
+    <div id="view-lobby" class="view-section active">
+      <div class="panel-box">
+        <label style="font-size:0.85rem; color:#f1e05a; font-weight:bold;">새 광산 방 만들기 ⛏️</label>
+        <div class="form-row">
+          <input type="text" id="create-room-title" placeholder="방 제목 입력" style="flex:2; min-width:180px;">
+          <select id="create-max-players" style="flex:1;">
+            <option value="5">정원: 5명 (추천)</option>
+            <option value="4">정원: 4명</option>
+            <option value="6">정원: 6명</option>
+            <option value="7">정원: 7명</option>
+            <option value="8">정원: 8명</option>
+            <option value="10">정원: 10명</option>
+          </select>
+          <button id="btn-create-room" class="btn btn-action" style="flex:1;">방 만들기</button>
+        </div>
       </div>
 
-      <!-- 우측 사이드바 (플레이어 목록 & 상태) -->
-      <div class="sidebar">
-        <div style="font-size:0.75rem; color:#f1e05a; font-weight:bold; border-bottom:1px solid #2e3440; padding-bottom:4px;">참가 광부 목록</div>
-        <div id="playersList" class="players-list"></div>
-        <div id="gameLogBox" style="flex:1; background:#11141c; border:1px solid #2e3440; border-radius:6px; padding:6px; font-size:0.65rem; color:#8b949e; overflow-y:auto;">
-          [대기실] 참가자를 기다리고 있습니다.
+      <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+        <label style="font-size:0.8rem; color:#8b949e; font-weight:bold;">진행 및 대기 중인 광산 목록</label>
+        <div id="room-list" class="room-list">
+          <p style="color:#666; font-size:0.8rem; padding:10px;">개설된 방이 없습니다. 새로운 방을 만들어보세요!</p>
         </div>
       </div>
     </div>
 
-    <!-- 하단 패 (Hand) & 컨트롤 -->
-    <div class="bottom-deck">
-      <div id="cardsTray" class="cards-tray"></div>
-      <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
-        <button id="btnRotateCard" class="btn btn-action" disabled>회전 🔄</button>
-        <button id="btnDiscardCard" class="btn btn-discard" disabled>버리기 🗑️</button>
+    <!-- [뷰 2: 게임 룸 화면 (대기 및 플레이)] -->
+    <div id="view-room" class="view-section">
+      <div class="room-topbar">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <strong id="room-title-label" style="font-size:0.85rem; color:#fff;">방 제목</strong>
+          <span id="roleBadge" class="badge" style="display:none;">역할</span>
+        </div>
+        <div class="game-stats">
+          <span>남은 덱: <strong id="deckRemainText" style="color:#58a6ff;">-</strong>장</span>
+          <span id="turnIndicator" class="badge badge-turn" style="display:none;">내 턴!</span>
+          <button id="btn-leave-room" class="btn btn-danger" style="padding:4px 8px; font-size:0.5rem;">방 나가기 🚪</button>
+        </div>
       </div>
-    </div>
 
-    <!-- 1. 방 로비 / 입장 모달 -->
-    <div id="lobbyModal" class="modal-backdrop" style="display:flex;">
-      <div class="modal-box">
-        <h2 style="font-family:'Press Start 2P', cursive; color:#f1e05a; font-size:0.9rem;">광산 탐사대 모집 ⛏️</h2>
-        <p style="font-size:0.75rem; color:#8b949e;">친구와 함께 금광을 찾거나 사보타주하세요!</p>
-        <input type="text" id="inputNickname" placeholder="내 광부 닉네임" style="background:#0d1017; border:1px solid #3b4252; color:#fff; padding:8px; border-radius:6px; text-align:center;">
-        <input type="text" id="inputRoomCode" placeholder="방 코드 (예: mine1)" value="mine1" style="background:#0d1017; border:1px solid #3b4252; color:#fff; padding:8px; border-radius:6px; text-align:center;">
-        <div style="display:flex; gap:6px;">
-          <button id="btnJoinRoom" class="btn btn-action" style="flex:1;">방 입장 / 생성</button>
+      <!-- 대기실 상태 바 (방장 시작 / 참가자 레디) -->
+      <div id="waiting-panel">
+        <div class="waiting-player-chips" id="waiting-player-chips"></div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button id="btn-ready-toggle" class="btn btn-primary">레디</button>
+          <button id="btn-host-start" class="btn btn-action" style="display:none;">탐사 시작! ⛏️</button>
+        </div>
+      </div>
+
+      <!-- 메인 보드 & 사이드바 -->
+      <div class="playfield-body">
+        <div class="board-container">
+          <div id="mineGrid" class="mine-grid"></div>
+        </div>
+
+        <div class="sidebar">
+          <div style="font-size:0.75rem; color:#f1e05a; font-weight:bold; border-bottom:1px solid #2e3440; padding-bottom:4px;">참가 광부 목록</div>
+          <div id="playersList" class="players-list"></div>
+          <div id="gameLogBox" style="flex:1; background:#11141c; border:1px solid #2e3440; border-radius:6px; padding:6px; font-size:0.65rem; color:#8b949e; overflow-y:auto;">
+            [안내] 방에 입장했습니다.
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단 패 & 컨트롤 -->
+      <div class="bottom-deck">
+        <div id="cardsTray" class="cards-tray"></div>
+        <div class="action-controls">
+          <div style="display:flex; gap:4px;">
+            <button id="btnRotateCard" class="btn btn-action" style="flex:1;" disabled>회전 🔄</button>
+            <button id="btnDiscardCard" class="btn btn-danger" style="flex:1;" disabled>버리기 🗑️</button>
+          </div>
+          <button id="btnConfirmTurn" class="btn btn-primary" style="display:none;">턴 마치기 ➔</button>
+          <button id="btnUndoAction" class="btn btn-secondary" style="display:none;">취소 (무르기) ↩️</button>
         </div>
       </div>
     </div>
 
-    <!-- 2. 대기실 모달 (방장 시작) -->
-    <div id="waitingModal" class="modal-backdrop">
+    <!-- 대상 지정 모달 (도구 파괴/수리) -->
+    <div id="targetPlayerModal" class="modal-backdrop">
       <div class="modal-box">
-        <h2 style="font-family:'Press Start 2P', cursive; color:#2ea043; font-size:0.85rem;">광산 대기실</h2>
-        <div style="font-size:0.75rem;">방 코드: <strong id="lobbyRoomCode" style="color:#f1e05a;"></strong></div>
-        <div id="waitingPlayersList" style="font-size:0.75rem; background:#0d1017; padding:8px; border-radius:6px; display:flex; flex-direction:column; gap:4px;"></div>
-        <button id="btnStartGame" class="btn btn-start" style="display:none;">탐사 시작! (게임 개시)</button>
-        <div id="waitingNotice" style="font-size:0.68rem; color:#8b949e;">방장이 시작하기를 기다리고 있습니다...</div>
+        <h3 id="targetModalTitle" style="font-family:'Press Start 2P', cursive; font-size:0.75rem; color:#f1e05a;"></h3>
+        <div id="targetPlayersList" style="display:flex; flex-direction:column; gap:6px; margin:8px 0;"></div>
+        <button id="btnCloseTargetModal" class="btn btn-danger">취소</button>
       </div>
     </div>
 
-    <!-- 3. 결과 모달 -->
+    <!-- 결과 모달 -->
     <div id="resultModal" class="modal-backdrop">
       <div class="modal-box">
         <h2 id="resultTitle" style="font-family:'Press Start 2P', cursive; font-size:1rem;"></h2>
-        <p id="resultDesc" style="font-size:0.8rem; color:#ccc; line-height:1.4;"></p>
-        <button id="btnRestartGame" class="btn btn-action" style="margin-top:8px;">새 게임 시작</button>
+        <p id="resultDesc" style="font-size:0.8rem; color:#ccc; line-height:1.5;"></p>
+        <button id="btnReturnLobby" class="btn btn-action" style="margin-top:8px;">로비로 돌아가기</button>
       </div>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import { getDatabase, ref, set, update, onValue, get, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+    import { 
+      getDatabase, ref, set, update, onValue, get, remove, onDisconnect 
+    } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBsvhq6Y1KzvUJ9gUlF6_QEgYoj-FzuZMU",
@@ -404,7 +559,7 @@
     };
 
     // ──────────────────────────────────────────────────
-    // [2] 타일 규격 & 덱 정의 (상하좌우 4방향 개방 비트: T, R, B, L)
+    // [2] 룰 및 타일 규격
     // ──────────────────────────────────────────────────
     const PATH_TYPES = {
       cross: { t: true, r: true, b: true, l: true, dead: false },
@@ -416,26 +571,13 @@
       curve_lb: { t: false, r: false, b: true, l: true, dead: false },
       curve_rt: { t: true, r: true, b: false, l: false, dead: false },
       curve_lt: { t: true, r: false, b: false, l: true, dead: false },
-      // 막다른 길 (Dead ends)
       dead_cross: { t: true, r: true, b: true, l: true, dead: true },
       dead_h: { t: false, r: true, b: false, l: true, dead: true },
       dead_v: { t: true, r: false, b: true, l: false, dead: true },
-      dead_r: { t: false, r: true, b: false, l: false, dead: true }
+      dead_t_down: { t: false, r: true, b: true, l: true, dead: true },
+      dead_curve_rb: { t: false, r: true, b: true, l: false, dead: true }
     };
 
-    // ──────────────────────────────────────────────────
-    // [3] 게임 상태 (State)
-    // ──────────────────────────────────────────────────
-    const G = {
-      roomId: null,
-      myUid: "user_" + Math.random().toString(36).substr(2, 6),
-      myName: "광부",
-      roomData: null,
-      selectedCardIdx: null,
-      selectedCardRotation: 0 // 0 or 180도
-    };
-
-    // 9x5 보드 초기 좌표 생성 (출발점: 0,2 / 목적지: 8,0 / 8,2 / 8,4)
     function createInitialGrid() {
       const grid = {};
       for (let r = 0; r < 5; r++) {
@@ -443,179 +585,466 @@
           grid[`${r}_${c}`] = null;
         }
       }
-      // 출발 타일 (십자로)
       grid["2_0"] = { type: "cross", ...PATH_TYPES.cross, fixed: true };
 
-      // 목적지 3개 (하나는 GOLD, 둘은 COAL)
       const goals = ["GOLD", "COAL", "COAL"].sort(() => 0.5 - Math.random());
       grid["0_8"] = { type: "goal", hidden: true, realType: goals[0] };
       grid["2_8"] = { type: "goal", hidden: true, realType: goals[1] };
       grid["4_8"] = { type: "goal", hidden: true, realType: goals[2] };
-
       return grid;
     }
 
-    // 초기 카드 덱 풀 생성
-    function createFullDeck() {
+    function createOfficialDeck() {
       const deck = [];
-      const pathKeys = Object.keys(PATH_TYPES);
-      for (let i = 0; i < 40; i++) {
-        const key = pathKeys[Math.floor(Math.random() * pathKeys.length)];
-        deck.push({ kind: "path", pathKey: key, ...PATH_TYPES[key] });
+      const openKeys = ["cross", "t_down", "t_up", "straight_h", "straight_v", "curve_rb", "curve_lb", "curve_rt", "curve_lt"];
+      const deadKeys = ["dead_cross", "dead_h", "dead_v", "dead_t_down", "dead_curve_rb"];
+
+      for (let i = 0; i < 35; i++) {
+        const k = openKeys[i % openKeys.length];
+        deck.push({ kind: "path", pathKey: k, ...PATH_TYPES[k], name: "길 타일" });
       }
-      // 액션 카드
+      for (let i = 0; i < 9; i++) {
+        const k = deadKeys[i % deadKeys.length];
+        deck.push({ kind: "path", pathKey: k, ...PATH_TYPES[k], name: "막힌 길" });
+      }
+
       for (let i = 0; i < 6; i++) deck.push({ kind: "action", actionType: "map", name: "지도 🗺️" });
-      for (let i = 0; i < 5; i++) deck.push({ kind: "action", actionType: "rockfall", name: "낙석 🪨" });
-      for (let i = 0; i < 4; i++) deck.push({ kind: "action", actionType: "break_pick", name: "곡괭이 파괴 🔨" });
-      for (let i = 0; i < 4; i++) deck.push({ kind: "action", actionType: "fix_pick", name: "곡괭이 수리 🛠️" });
+      for (let i = 0; i < 3; i++) deck.push({ kind: "action", actionType: "rockfall", name: "낙석 🪨" });
+      for (let i = 0; i < 9; i++) deck.push({ kind: "action", actionType: "break_pick", name: "곡괭이 파괴 🔨" });
+      for (let i = 0; i < 9; i++) deck.push({ kind: "action", actionType: "fix_pick", name: "곡괭이 수리 🛠️" });
+
       return deck.sort(() => 0.5 - Math.random());
     }
 
     // ──────────────────────────────────────────────────
-    // [4] SVG 타일 그래픽 렌더러
+    // [3] 사용자 & 세션 관리 (단일 기기 세션 보장)
     // ──────────────────────────────────────────────────
-    function renderTileSVG(tile) {
-      if (!tile) return "";
+    let myUid = localStorage.getItem("saboteur_uid") || ("user_" + Math.random().toString(36).substr(2, 6));
+    let myName = localStorage.getItem("saboteur_nickname") || "광부_" + myUid.substr(5, 3);
+    let mySessionId = Date.now() + "_" + Math.random().toString(36).substr(2, 6);
 
-      if (tile.type === "goal") {
-        if (tile.hidden) {
-          return `
-            <svg class="tile-svg" viewBox="0 0 100 100">
-              <rect width="100" height="100" fill="#252b3b" rx="8"/>
-              <text x="50" y="60" fill="#f1e05a" font-size="34" font-weight="bold" text-anchor="middle">?</text>
-            </svg>
-          `;
-        } else if (tile.realType === "GOLD") {
-          return `
-            <svg class="tile-svg" viewBox="0 0 100 100">
-              <rect width="100" height="100" fill="#b8860b" rx="8"/>
-              <circle cx="50" cy="50" r="28" fill="#ffd700"/>
-              <text x="50" y="58" fill="#000" font-size="20" font-weight="bold" text-anchor="middle">GOLD</text>
-            </svg>
-          `;
-        } else {
-          return `
-            <svg class="tile-svg" viewBox="0 0 100 100">
-              <rect width="100" height="100" fill="#30363d" rx="8"/>
-              <circle cx="50" cy="50" r="26" fill="#1c2128"/>
-              <text x="50" y="56" fill="#8b949e" font-size="18" font-weight="bold" text-anchor="middle">돌</text>
-            </svg>
-          `;
+    localStorage.setItem("saboteur_uid", myUid);
+    localStorage.setItem("saboteur_nickname", myName);
+    sessionStorage.setItem("saboteur_session_id", mySessionId);
+
+    const userDisplayName = document.getElementById("user-display-name");
+    userDisplayName.textContent = myName;
+
+    // 세션 토큰 감시 (다른 창/기기 중복 로그인 차단)
+    set(ref(db, `saboteur_sessions/${myUid}`), mySessionId);
+    onValue(ref(db, `saboteur_sessions/${myUid}`), (snap) => {
+      const activeSession = snap.val();
+      if (activeSession && activeSession !== mySessionId) {
+        alert("다른 기기 또는 다른 탭에서 접속하여 이 창의 연결이 종료됩니다.");
+        leaveRoom();
+        location.reload();
+      }
+    });
+
+    document.getElementById("btn-change-nickname").addEventListener("click", () => {
+      const input = prompt("사용할 광부 닉네임을 입력하세요:", myName);
+      if (input && input.trim()) {
+        myName = input.trim();
+        localStorage.setItem("saboteur_nickname", myName);
+        userDisplayName.textContent = myName;
+        if (currentRoomId) {
+          update(ref(db, `saboteur_rooms/${currentRoomId}/players/${myUid}`), { name: myName });
         }
       }
+    });
 
-      // 길 타일 렌더
-      const pathColor = tile.dead ? "#ff7b72" : "#d29922";
-      const bg = "#1c2128";
-      let paths = `<rect width="100" height="100" fill="${bg}" rx="8"/>`;
+    // ──────────────────────────────────────────────────
+    // [4] 게임 상태
+    // ──────────────────────────────────────────────────
+    let currentRoomId = null;
+    let roomData = null;
+    let roomListenerUnsub = null;
+    let selectedCardIdx = null;
+    let selectedCardRotation = 0;
+    let tentativeAction = null;
 
-      // 중심점
-      paths += `<circle cx="50" cy="50" r="14" fill="${pathColor}"/>`;
-      if (tile.t) paths += `<rect x="36" y="0" width="28" height="50" fill="${pathColor}"/>`;
-      if (tile.b) paths += `<rect x="36" y="50" width="28" height="50" fill="${pathColor}"/>`;
-      if (tile.l) paths += `<rect x="0" y="36" width="50" height="28" fill="${pathColor}"/>`;
-      if (tile.r) paths += `<rect x="50" y="36" width="50" height="28" fill="${pathColor}"/>`;
+    const views = {
+      lobby: document.getElementById("view-lobby"),
+      room: document.getElementById("view-room")
+    };
 
-      if (tile.dead) {
-        paths += `<line x1="30" y1="30" x2="70" y2="70" stroke="#da3633" stroke-width="6"/>
-                  <line x1="70" y1="30" x2="30" y2="70" stroke="#da3633" stroke-width="6"/>`;
-      }
-      if (tile.fixed) {
-        paths += `<text x="50" y="56" fill="#fff" font-size="14" font-weight="bold" text-anchor="middle">출발</text>`;
-      }
-
-      return `<svg class="tile-svg" viewBox="0 0 100 100">${paths}</svg>`;
+    function switchView(viewName) {
+      Object.keys(views).forEach(k => views[k].classList.remove("active"));
+      if (views[viewName]) views[viewName].classList.add("active");
     }
 
     // ──────────────────────────────────────────────────
-    // [5] 길 연결 유효성 검사 (규칙 알고리즘)
+    // [5] 로비 방 목록 실시간 동기화
     // ──────────────────────────────────────────────────
-    function isValidTilePlacement(grid, r, c, tile) {
-      if (grid[`${r}_${c}`] !== null) return false;
+    const roomListContainer = document.getElementById("room-list");
 
-      const neighbors = [
-        { r: r - 1, c: c, myDir: "t", oppDir: "b" },
-        { r: r + 1, c: c, myDir: "b", oppDir: "t" },
-        { r: r, c: c - 1, myDir: "l", oppDir: "r" },
-        { r: r, c: c + 1, myDir: "r", oppDir: "l" }
-      ];
+    onValue(ref(db, "saboteur_rooms"), (snapshot) => {
+      const rooms = snapshot.val();
+      roomListContainer.innerHTML = "";
+      if (!rooms) {
+        roomListContainer.innerHTML = `<p style="color:#666; font-size:0.8rem; padding:10px;">개설된 방이 없습니다. 새로운 방을 만들어보세요!</p>`;
+        return;
+      }
 
-      let hasConnectedNeighbor = false;
+      Object.entries(rooms).forEach(([rId, r]) => {
+        const pList = r.players ? Object.values(r.players) : [];
+        if (pList.length === 0) {
+          remove(ref(db, `saboteur_rooms/${rId}`));
+          return;
+        }
 
-      for (const n of neighbors) {
-        if (n.r < 0 || n.r >= 5 || n.c < 0 || n.c >= 9) continue;
-        const neighborTile = grid[`${n.r}_${n.c}`];
-        if (!neighborTile) continue;
+        const isFull = (pList.length >= (r.maxPlayers || 5));
+        const isPlaying = (r.status === "PLAYING");
 
-        // 목적지 미오픈 타일과의 인접
-        if (neighborTile.type === "goal") {
-          if (tile[n.myDir]) {
-            // 목적지와 연결됨
-            hasConnectedNeighbor = true;
+        const div = document.createElement("div");
+        div.className = "room-item";
+        div.innerHTML = `
+          <div>
+            <strong style="color:#f1e05a;">${escapeHtml(r.title)}</strong>
+            <div style="font-size:0.75rem; color:#8b949e; margin-top:3px;">
+              인원: ${pList.length}/${r.maxPlayers || 5}명 · ${isPlaying ? '탐사중' : '대기중'}
+            </div>
+          </div>
+          <button class="btn btn-action" ${isFull || isPlaying ? 'disabled' : ''}>
+            ${isPlaying ? '진행중' : (isFull ? '만원' : '입장')}
+          </button>
+        `;
+
+        if (!isFull && !isPlaying) {
+          div.querySelector("button").addEventListener("click", () => joinRoom(rId));
+        }
+
+        roomListContainer.appendChild(div);
+      });
+    });
+
+    // 방 만들기
+    document.getElementById("btn-create-room").addEventListener("click", async () => {
+      const titleInput = document.getElementById("create-room-title");
+      const title = titleInput.value.trim() || `${myName}의 금광`;
+      const maxPlayers = parseInt(document.getElementById("create-max-players").value, 10) || 5;
+
+      const newRoomRef = ref(db, `saboteur_rooms/${Date.now().toString(36)}`);
+      const rId = newRoomRef.key;
+
+      const newRoomData = {
+        id: rId,
+        title: title,
+        maxPlayers: maxPlayers,
+        status: "WAITING",
+        hostUid: myUid,
+        players: {
+          [myUid]: {
+            id: myUid,
+            name: myName,
+            isReady: true,
+            joinedAt: Date.now()
           }
-          continue;
-        }
+        },
+        playerOrder: [myUid],
+        grid: null,
+        deck: null,
+        hands: null,
+        roles: null,
+        turnIdx: 0,
+        brokenPicks: {}
+      };
 
-        // 맞닿은 면의 개방 상태가 정확히 일치해야 함
-        const myOpen = Boolean(tile[n.myDir]);
-        const neighborOpen = Boolean(neighborTile[n.oppDir]);
+      await set(newRoomRef, newRoomData);
+      titleInput.value = "";
+      joinRoom(rId);
+    });
 
-        if (myOpen !== neighborOpen) {
-          return false; // 한쪽은 뚫렸는데 한쪽은 막혔으면 배치 불가
-        }
+    // 방 입장
+    async function joinRoom(rId) {
+      currentRoomId = rId;
+      const roomRef = ref(db, `saboteur_rooms/${rId}`);
+      const snap = await get(roomRef);
 
-        if (myOpen && neighborOpen) {
-          hasConnectedNeighbor = true;
-        }
+      if (!snap.exists()) {
+        alert("존재하지 않거나 삭제된 방입니다.");
+        return;
       }
 
-      return hasConnectedNeighbor;
+      const r = snap.val();
+      const pCount = Object.keys(r.players || {}).length;
+      if (r.status !== "WAITING" && !r.players?.[myUid]) {
+        alert("이미 게임이 시작된 방입니다.");
+        return;
+      }
+      if (pCount >= (r.maxPlayers || 5) && !r.players?.[myUid]) {
+        alert("정원이 가득 찬 방입니다.");
+        return;
+      }
+
+      const isHost = (r.hostUid === myUid);
+      const playerRef = ref(db, `saboteur_rooms/${rId}/players/${myUid}`);
+
+      await update(playerRef, {
+        id: myUid,
+        name: myName,
+        isReady: isHost ? true : false,
+        joinedAt: Date.now()
+      });
+
+      // 비정상 종료 시 자동 퇴장
+      onDisconnect(playerRef).remove();
+
+      switchView("room");
+      listenToCurrentRoom(rId);
     }
 
+    // 방 나가기
+    function leaveRoom() {
+      if (currentRoomId) {
+        remove(ref(db, `saboteur_rooms/${currentRoomId}/players/${myUid}`)).then(() => {
+          get(ref(db, `saboteur_rooms/${currentRoomId}/players`)).then(snap => {
+            const players = snap.val() || {};
+            const pIds = Object.keys(players);
+            if (pIds.length === 0) {
+              remove(ref(db, `saboteur_rooms/${currentRoomId}`));
+            } else if (roomData && roomData.hostUid === myUid) {
+              // 방장 자동 위임
+              update(ref(db, `saboteur_rooms/${currentRoomId}`), { hostUid: pIds[0] });
+            }
+          });
+        });
+      }
+
+      currentRoomId = null;
+      roomData = null;
+      selectedCardIdx = null;
+      tentativeAction = null;
+      document.getElementById("resultModal").style.display = "none";
+      switchView("lobby");
+    }
+
+    document.getElementById("btn-leave-room").addEventListener("click", () => {
+      if (confirm("정말 방에서 나가시겠습니까?")) {
+        leaveRoom();
+      }
+    });
+
+    document.getElementById("btnReturnLobby").addEventListener("click", leaveRoom);
+
     // ──────────────────────────────────────────────────
-    // [6] 보드 및 UI 렌더링
+    // [6] 방 실시간 리스너 및 렌더링
+    // ──────────────────────────────────────────────────
+    function listenToCurrentRoom(rId) {
+      const roomRef = ref(db, `saboteur_rooms/${rId}`);
+      onValue(roomRef, (snap) => {
+        roomData = snap.val();
+        if (!roomData) {
+          alert("방이 종료되었거나 폭파되었습니다.");
+          leaveRoom();
+          return;
+        }
+
+        const players = roomData.players || {};
+        const pIds = Object.keys(players);
+
+        // 방장 자동 정리
+        if (!players[roomData.hostUid] && pIds.length > 0) {
+          update(roomRef, { hostUid: pIds[0] });
+          return;
+        }
+
+        renderRoomUI();
+      });
+    }
+
+    function renderRoomUI() {
+      const isHost = (roomData.hostUid === myUid);
+      const players = roomData.players || {};
+      const pIds = Object.keys(players);
+
+      document.getElementById("room-title-label").textContent = roomData.title;
+
+      // 1. 대기실 상태
+      if (roomData.status === "WAITING") {
+        document.getElementById("waiting-panel").style.display = "flex";
+        document.getElementById("roleBadge").style.display = "none";
+        document.getElementById("turnIndicator").style.display = "none";
+        document.getElementById("deckRemainText").textContent = "-";
+
+        const chipsEl = document.getElementById("waiting-player-chips");
+        chipsEl.innerHTML = "";
+
+        let allOthersReady = true;
+        pIds.forEach(pId => {
+          const p = players[pId];
+          const isPlayerHost = (pId === roomData.hostUid);
+          const chip = document.createElement("div");
+          chip.className = `player-chip ${p.isReady ? 'ready' : ''}`;
+          chip.innerHTML = `${isPlayerHost ? '👑' : ''} ${escapeHtml(p.name)} [${p.isReady ? '레디' : '대기'}]`;
+          chipsEl.appendChild(chip);
+
+          if (!isPlayerHost && !p.isReady) {
+            allOthersReady = false;
+          }
+        });
+
+        const btnReady = document.getElementById("btn-ready-toggle");
+        const btnStart = document.getElementById("btn-host-start");
+
+        if (isHost) {
+          btnReady.style.display = "none";
+          btnStart.style.display = "inline-block";
+          // 3명 이상일 때 원작 룰에 부합하지만, 테스트 편의를 위해 최소 1명부터 허용
+          btnStart.disabled = (pIds.length > 1 && !allOthersReady);
+        } else {
+          btnStart.style.display = "none";
+          btnReady.style.display = "inline-block";
+          const myReady = players[myUid]?.isReady || false;
+          btnReady.textContent = myReady ? "준비 취소" : "레디";
+          btnReady.className = `btn ${myReady ? 'btn-danger' : 'btn-primary'}`;
+        }
+
+        renderBoardEmptyPreview();
+        return;
+      }
+
+      // 2. 게임 플레이 상태
+      document.getElementById("waiting-panel").style.display = "none";
+
+      renderPlayersUI();
+      renderHandUI();
+      renderBoardUI();
+
+      if (roomData.status === "FINISHED") {
+        const winner = roomData.winner;
+        const myRole = roomData.roles?.[myUid];
+        const isWin = (winner === "MINERS" && myRole === "MINER") || (winner === "SABOTEUR" && myRole === "SABOTEUR");
+
+        document.getElementById("resultTitle").textContent = isWin ? "🎉 탐사 성공 (승리)!" : "💀 탐사 실패 (패배)...";
+        document.getElementById("resultTitle").style.color = isWin ? "#2ea043" : "#da3633";
+        document.getElementById("resultDesc").innerHTML = `
+          승리 진영: <strong>${winner === "MINERS" ? "선량한 광부들" : "사보추어(방해꾼)"}</strong><br>
+          내 역할: <strong>${myRole === "SABOTEUR" ? "사보추어 💣" : "광부 ⛏️"}</strong>
+        `;
+        document.getElementById("resultModal").style.display = "flex";
+      }
+    }
+
+    // 대기 중 빈 보드 렌더링
+    function renderBoardEmptyPreview() {
+      const mineGridEl = document.getElementById("mineGrid");
+      mineGridEl.innerHTML = "";
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cell = document.createElement("div");
+          cell.className = "grid-cell";
+          if (r === 2 && c === 0) cell.innerHTML = renderTileSVG({ type: "cross", ...PATH_TYPES.cross, fixed: true });
+          if ((r === 0 || r === 2 || r === 4) && c === 8) cell.innerHTML = renderTileSVG({ type: "goal", hidden: true });
+          mineGridEl.appendChild(cell);
+        }
+      }
+      document.getElementById("cardsTray").innerHTML = `<span style="font-size:0.7rem; color:#888; margin:auto;">게임 시작 후 카드가 지급됩니다.</span>`;
+    }
+
+    // 방장 시작 (공식 인원수별 카드 분배 & 사보추어 배정)
+    document.getElementById("btn-host-start").addEventListener("click", async () => {
+      const order = Object.keys(roomData.players || []);
+      const pCount = order.length;
+      if (pCount < 1) return alert("최소 1명 이상이어야 합니다.");
+
+      // 공식 인원수별 장수
+      let handSize = 6;
+      if (pCount >= 8) handSize = 4;
+      else if (pCount >= 6) handSize = 5;
+      else handSize = 6;
+
+      // 공식 인원수별 사보추어 수 (3~4인: 1명, 5~6인: 2명, 7인 이상: 3명)
+      let saboCount = 1;
+      if (pCount >= 7) saboCount = 3;
+      else if (pCount >= 5) saboCount = 2;
+
+      const shuffledOrder = [...order].sort(() => 0.5 - Math.random());
+      const roles = {};
+      order.forEach(uid => roles[uid] = "MINER");
+      for (let i = 0; i < saboCount; i++) {
+        if (shuffledOrder[i]) roles[shuffledOrder[i]] = "SABOTEUR";
+      }
+
+      const fullDeck = createOfficialDeck();
+      const hands = {};
+      order.forEach(uid => {
+        hands[uid] = fullDeck.splice(0, handSize);
+      });
+
+      const updates = {
+        status: "PLAYING",
+        grid: createInitialGrid(),
+        deck: fullDeck,
+        hands: hands,
+        roles: roles,
+        playerOrder: order,
+        turnIdx: 0,
+        brokenPicks: {}
+      };
+
+      await update(ref(db, `saboteur_rooms/${currentRoomId}`), updates);
+    });
+
+    // 레디 토글
+    document.getElementById("btn-ready-toggle").addEventListener("click", () => {
+      const cur = roomData.players[myUid]?.isReady || false;
+      update(ref(db, `saboteur_rooms/${currentRoomId}/players/${myUid}`), { isReady: !cur });
+    });
+
+    // ──────────────────────────────────────────────────
+    // [7] 보드판 & 조작 UI 렌더러
     // ──────────────────────────────────────────────────
     const mineGridEl = document.getElementById("mineGrid");
     const cardsTrayEl = document.getElementById("cardsTray");
     const playersListEl = document.getElementById("playersList");
     const btnRotateCard = document.getElementById("btnRotateCard");
     const btnDiscardCard = document.getElementById("btnDiscardCard");
+    const btnConfirmTurn = document.getElementById("btnConfirmTurn");
+    const btnUndoAction = document.getElementById("btnUndoAction");
 
     function renderBoardUI() {
-      if (!G.roomData) return;
-      const grid = G.roomData.grid || {};
+      if (!roomData || !roomData.grid) return;
+      const baseGrid = roomData.grid;
       mineGridEl.innerHTML = "";
 
-      const myCard = G.selectedCardIdx !== null ? G.roomData.hands?.[G.myUid]?.[G.selectedCardIdx] : null;
-      const isMyTurn = (G.roomData.playerOrder?.[G.roomData.turnIdx] === G.myUid);
-      const isPickBroken = G.roomData.brokenPicks?.[G.myUid] === true;
+      const displayGrid = { ...baseGrid };
+      if (tentativeAction && tentativeAction.type === "PLACE") {
+        displayGrid[`${tentativeAction.r}_${tentativeAction.c}`] = tentativeAction.tile;
+      }
+
+      const myCard = (selectedCardIdx !== null) ? roomData.hands?.[myUid]?.[selectedCardIdx] : null;
+      const isMyTurn = (roomData.playerOrder?.[roomData.turnIdx] === myUid);
+      const isPickBroken = roomData.brokenPicks?.[myUid] === true;
+      const hasTentative = Boolean(tentativeAction);
 
       for (let r = 0; r < 5; r++) {
         for (let c = 0; c < 9; c++) {
           const cellKey = `${r}_${c}`;
-          const tile = grid[cellKey];
+          const tile = displayGrid[cellKey];
           const cell = document.createElement("div");
           cell.className = "grid-cell";
 
           if (tile) {
             cell.innerHTML = renderTileSVG(tile);
-            // 낙석 카드 선택 시 파괴 가능 타일 하이라이트 (출발점, 목적지 제외)
-            if (isMyTurn && myCard?.actionType === "rockfall" && !tile.fixed && tile.type !== "goal") {
-              cell.classList.add("highlight-rockfall");
-              cell.addEventListener("click", () => executeRockfall(r, c));
+            if (tentativeAction && tentativeAction.type === "PLACE" && tentativeAction.r === r && tentativeAction.c === c) {
+              cell.classList.add("tentative-tile");
             }
-            // 지도 카드 선택 시 목적지 카드 하이라이트
-            if (isMyTurn && myCard?.actionType === "map" && tile.type === "goal" && tile.hidden) {
+
+            if (!hasTentative && isMyTurn && myCard?.actionType === "rockfall" && !tile.fixed && tile.type !== "goal") {
+              cell.classList.add("highlight-rockfall");
+              cell.addEventListener("click", () => setupRockfallAction(r, c));
+            }
+            if (!hasTentative && isMyTurn && myCard?.actionType === "map" && tile.type === "goal" && tile.hidden) {
               cell.classList.add("highlight-map");
-              cell.addEventListener("click", () => executeMapAction(r, c, tile));
+              cell.addEventListener("click", () => setupMapAction(tile));
             }
           } else {
-            // 빈 칸: 길 타일 배치 가능 여부 하이라이트
-            if (isMyTurn && myCard?.kind === "path" && !isPickBroken) {
-              const currentPlacedTile = getRotatedTile(myCard, G.selectedCardRotation);
-              if (isValidTilePlacement(grid, r, c, currentPlacedTile)) {
+            if (!hasTentative && isMyTurn && myCard?.kind === "path" && !isPickBroken) {
+              const rotated = getRotatedTile(myCard, selectedCardRotation);
+              if (isValidTilePlacement(displayGrid, r, c, rotated)) {
                 cell.classList.add("highlight-valid");
-                cell.addEventListener("click", () => placePathTile(r, c, currentPlacedTile));
+                cell.addEventListener("click", () => setupPlacementAction(r, c, rotated));
               }
             }
           }
@@ -625,35 +1054,29 @@
       }
     }
 
-    function getRotatedTile(tile, rot) {
-      if (rot === 0) return { ...tile };
-      // 180도 회전
-      return {
-        ...tile,
-        t: tile.b,
-        b: tile.t,
-        l: tile.r,
-        r: tile.l
-      };
-    }
-
     function renderHandUI() {
-      if (!G.roomData) return;
-      const hand = G.roomData.hands?.[G.myUid] || [];
+      if (!roomData || !roomData.hands) return;
+      const hand = roomData.hands[myUid] || [];
       cardsTrayEl.innerHTML = "";
 
-      const isMyTurn = (G.roomData.playerOrder?.[G.roomData.turnIdx] === G.myUid);
+      const isMyTurn = (roomData.playerOrder?.[roomData.turnIdx] === myUid);
+      const hasTentative = Boolean(tentativeAction);
 
       hand.forEach((card, idx) => {
+        const isTentativeCard = (tentativeAction && tentativeAction.cardIdx === idx);
         const item = document.createElement("div");
-        item.className = `card-item ${G.selectedCardIdx === idx ? "selected" : ""}`;
+        item.className = `card-item ${selectedCardIdx === idx ? "selected" : ""} ${isTentativeCard ? "disabled" : ""}`;
 
         let previewHTML = "";
         if (card.kind === "path") {
-          const previewTile = getRotatedTile(card, G.selectedCardIdx === idx ? G.selectedCardRotation : 0);
+          const previewTile = getRotatedTile(card, selectedCardIdx === idx ? selectedCardRotation : 0);
           previewHTML = `<div class="card-preview">${renderTileSVG(previewTile)}</div>`;
         } else {
-          previewHTML = `<div class="card-preview" style="font-size:1.6rem;">${card.actionType === "map" ? "🗺️" : (card.actionType === "rockfall" ? "🪨" : "🔨")}</div>`;
+          let icon = "🗺️";
+          if (card.actionType === "rockfall") icon = "🪨";
+          else if (card.actionType === "break_pick") icon = "🔨";
+          else if (card.actionType === "fix_pick") icon = "🛠️";
+          previewHTML = `<div class="card-preview" style="font-size:1.6rem;">${icon}</div>`;
         }
 
         item.innerHTML = `
@@ -662,12 +1085,15 @@
         `;
 
         item.addEventListener("click", () => {
-          if (!isMyTurn) return;
-          if (G.selectedCardIdx === idx) {
-            G.selectedCardIdx = null;
+          if (!isMyTurn || hasTentative) return;
+          if (selectedCardIdx === idx) {
+            selectedCardIdx = null;
           } else {
-            G.selectedCardIdx = idx;
-            G.selectedCardRotation = 0;
+            selectedCardIdx = idx;
+            selectedCardRotation = 0;
+            if (card.actionType === "break_pick" || card.actionType === "fix_pick") {
+              openTargetPlayerModal(card.actionType);
+            }
           }
           updateControlButtons();
           renderHandUI();
@@ -681,67 +1107,99 @@
     }
 
     function updateControlButtons() {
-      const isMyTurn = (G.roomData?.playerOrder?.[G.roomData?.turnIdx] === G.myUid);
-      const hasCardSelected = (G.selectedCardIdx !== null);
-      btnDiscardCard.disabled = !isMyTurn || !hasCardSelected;
-      btnRotateCard.disabled = !isMyTurn || !hasCardSelected || (G.roomData?.hands?.[G.myUid]?.[G.selectedCardIdx]?.kind !== "path");
+      const isMyTurn = (roomData?.playerOrder?.[roomData?.turnIdx] === myUid);
+      const hasTentative = Boolean(tentativeAction);
+      const hasCardSelected = (selectedCardIdx !== null);
+
+      if (hasTentative) {
+        btnConfirmTurn.style.display = "block";
+        btnUndoAction.style.display = "block";
+        btnRotateCard.style.display = "none";
+        btnDiscardCard.style.display = "none";
+      } else {
+        btnConfirmTurn.style.display = "none";
+        btnUndoAction.style.display = "none";
+        btnRotateCard.style.display = "block";
+        btnDiscardCard.style.display = "block";
+
+        btnDiscardCard.disabled = !isMyTurn || !hasCardSelected;
+        btnRotateCard.disabled = !isMyTurn || !hasCardSelected || (roomData?.hands?.[myUid]?.[selectedCardIdx]?.kind !== "path");
+      }
     }
 
     btnRotateCard.addEventListener("click", () => {
-      G.selectedCardRotation = (G.selectedCardRotation === 0) ? 180 : 0;
+      selectedCardRotation = (selectedCardRotation === 0) ? 180 : 0;
       renderHandUI();
       renderBoardUI();
     });
 
     btnDiscardCard.addEventListener("click", () => {
-      if (G.selectedCardIdx === null) return;
-      discardAndNextTurn();
+      if (selectedCardIdx === null) return;
+      tentativeAction = {
+        type: "DISCARD",
+        cardIdx: selectedCardIdx
+      };
+      selectedCardIdx = null;
+      renderHandUI();
+      renderBoardUI();
     });
 
-    function renderPlayersUI() {
-      if (!G.roomData) return;
-      playersListEl.innerHTML = "";
-      const order = G.roomData.playerOrder || [];
-      const currentTurnUid = order[G.roomData.turnIdx];
+    btnUndoAction.addEventListener("click", () => {
+      tentativeAction = null;
+      selectedCardIdx = null;
+      selectedCardRotation = 0;
+      renderHandUI();
+      renderBoardUI();
+    });
 
-      order.forEach(uid => {
-        const p = G.roomData.players?.[uid];
-        if (!p) return;
-        const row = document.createElement("div");
-        row.className = `player-row ${uid === currentTurnUid ? "active-turn" : ""}`;
-        const isBroken = G.roomData.brokenPicks?.[uid] === true;
+    // 턴 마치기 확정
+    btnConfirmTurn.addEventListener("click", async () => {
+      if (!tentativeAction) return;
+      btnConfirmTurn.disabled = true;
 
-        row.innerHTML = `
-          <span>${uid === currentTurnUid ? "👉 " : ""}${p.name} ${uid === G.myUid ? "(나)" : ""}</span>
-          <div style="display:flex; gap:4px;">
-            ${isBroken ? '<span style="color:#da3633;">🔨고장</span>' : ''}
-          </div>
-        `;
-        playersListEl.appendChild(row);
-      });
+      const action = tentativeAction;
+      const hand = [...(roomData.hands?.[myUid] || [])];
+      hand.splice(action.cardIdx, 1);
 
-      // 내 역할 표시
-      const myRole = G.roomData.roles?.[G.myUid];
-      const roleBadge = document.getElementById("roleBadge");
-      if (myRole) {
-        roleBadge.style.display = "inline-block";
-        roleBadge.textContent = myRole === "SABOTEUR" ? "사보추어 💣" : "선량한 광부 ⛏️";
-        roleBadge.className = `badge ${myRole === "SABOTEUR" ? "badge-saboteur" : "badge-miner"}`;
+      const deck = [...(roomData.deck || [])];
+      if (deck.length > 0) {
+        hand.push(deck.pop());
       }
 
-      document.getElementById("deckRemainText").textContent = (G.roomData.deck || []).length;
-      document.getElementById("turnIndicator").style.display = (currentTurnUid === G.myUid) ? "inline-block" : "none";
-    }
+      const order = roomData.playerOrder || [];
+      const nextTurnIdx = (roomData.turnIdx + 1) % order.length;
 
-    // ──────────────────────────────────────────────────
-    // [7] 게임 액션 실행 로직
-    // ──────────────────────────────────────────────────
-    async function placePathTile(r, c, tile) {
+      const updates = {
+        ...action.extraUpdates,
+        [`hands/${myUid}`]: hand,
+        deck: deck,
+        turnIdx: nextTurnIdx
+      };
+
+      let allHandsEmpty = (hand.length === 0);
+      order.forEach(uid => {
+        if (uid !== myUid && (roomData.hands?.[uid] || []).length > 0) {
+          allHandsEmpty = false;
+        }
+      });
+      if (deck.length === 0 && allHandsEmpty) {
+        updates.status = "FINISHED";
+        updates.winner = "SABOTEUR";
+      }
+
+      tentativeAction = null;
+      selectedCardIdx = null;
+      selectedCardRotation = 0;
+
+      await update(ref(db, `saboteur_rooms/${currentRoomId}`), updates);
+      btnConfirmTurn.disabled = false;
+    });
+
+    function setupPlacementAction(r, c, tile) {
       SFX.tile();
       const updates = {};
       updates[`grid/${r}_${c}`] = tile;
 
-      // 목적지 오픈 판정 체크
       const neighbors = [
         { r: r - 1, c: c, dir: "t" },
         { r: r + 1, c: c, dir: "b" },
@@ -751,187 +1209,143 @@
 
       for (const n of neighbors) {
         if (n.r < 0 || n.r >= 5 || n.c < 0 || n.c >= 9) continue;
-        const target = G.roomData.grid?.[`${n.r}_${n.c}`];
+        const target = roomData.grid?.[`${n.r}_${n.c}`];
         if (target && target.type === "goal" && target.hidden && tile[n.dir]) {
-          // 목적지 공개!
           updates[`grid/${n.r}_${n.c}/hidden`] = false;
           if (target.realType === "GOLD") {
-            // 광부 승리!
-            updates[`status`] = "FINISHED";
-            updates[`winner`] = "MINERS";
+            updates.status = "FINISHED";
+            updates.winner = "MINERS";
             SFX.gold();
           }
         }
       }
 
-      await completeTurnWithCardUsage(updates);
+      tentativeAction = {
+        type: "PLACE",
+        cardIdx: selectedCardIdx,
+        r: r,
+        c: c,
+        tile: tile,
+        extraUpdates: updates
+      };
+
+      selectedCardIdx = null;
+      renderHandUI();
+      renderBoardUI();
     }
 
-    async function executeRockfall(r, c) {
-      if (!confirm("이 길 타일을 파괴하시겠습니까?")) return;
+    function setupRockfallAction(r, c) {
       SFX.rockfall();
-      const updates = {};
-      updates[`grid/${r}_${c}`] = null;
-      await completeTurnWithCardUsage(updates);
+      tentativeAction = {
+        type: "ACTION",
+        cardIdx: selectedCardIdx,
+        extraUpdates: { [`grid/${r}_${c}`]: null }
+      };
+      selectedCardIdx = null;
+      renderHandUI();
+      renderBoardUI();
     }
 
-    function executeMapAction(r, c, tile) {
+    function setupMapAction(tile) {
       alert(`🗺️ [지도 확인 결과]\n해당 목적지는 [${tile.realType === "GOLD" ? "⭐ 진짜 금광!" : "❌ 석탄(돌)"}] 입니다!`);
-      completeTurnWithCardUsage({});
-    }
-
-    async function discardAndNextTurn() {
-      playTone(200, 0.1, "sine");
-      await completeTurnWithCardUsage({});
-    }
-
-    // 턴 종료 처리 (패 소모, 새 카드 드로우, 다음 사람 턴)
-    async function completeTurnWithCardUsage(extraUpdates = {}) {
-      const hand = [...(G.roomData.hands?.[G.myUid] || [])];
-      hand.splice(G.selectedCardIdx, 1);
-
-      const deck = [...(G.roomData.deck || [])];
-      if (deck.length > 0) {
-        hand.push(deck.pop());
-      }
-
-      const order = G.roomData.playerOrder || [];
-      const nextTurnIdx = (G.roomData.turnIdx + 1) % order.length;
-
-      // 덱 소진 및 아무도 금을 못 찾았을 때 사보추어 승리 판정
-      let statusUpdate = {};
-      if (deck.length === 0 && hand.length === 0) {
-        statusUpdate = { status: "FINISHED", winner: "SABOTEUR" };
-      }
-
-      const updates = {
-        ...extraUpdates,
-        ...statusUpdate,
-        [`hands/${G.myUid}`]: hand,
-        deck: deck,
-        turnIdx: nextTurnIdx
+      tentativeAction = {
+        type: "ACTION",
+        cardIdx: selectedCardIdx,
+        extraUpdates: {}
       };
-
-      G.selectedCardIdx = null;
-      G.selectedCardRotation = 0;
-
-      await update(ref(db, `saboteur_rooms/${G.roomId}`), updates);
+      selectedCardIdx = null;
+      renderHandUI();
+      renderBoardUI();
     }
 
-    // ──────────────────────────────────────────────────
-    // [8] 방 입장 및 대기실 동기화 (Firebase)
-    // ──────────────────────────────────────────────────
-    document.getElementById("btnJoinRoom").addEventListener("click", async () => {
-      const name = document.getElementById("inputNickname").value.trim() || "탐사광부";
-      const code = document.getElementById("inputRoomCode").value.trim() || "mine1";
-      G.myName = name;
-      G.roomId = code;
+    function openTargetPlayerModal(actionType) {
+      const modal = document.getElementById("targetPlayerModal");
+      const listEl = document.getElementById("targetPlayersList");
+      const titleEl = document.getElementById("targetModalTitle");
+      listEl.innerHTML = "";
 
-      const roomRef = ref(db, `saboteur_rooms/${code}`);
-      const snap = await get(roomRef);
+      const isBreak = (actionType === "break_pick");
+      titleEl.textContent = isBreak ? "🔨 곡괭이를 파괴할 대상 선택" : "🛠️ 곡괭이를 수리할 대상 선택";
 
-      if (!snap.exists()) {
-        // 방장: 방 생성
-        const newRoom = {
-          hostUid: G.myUid,
-          status: "WAITING",
-          players: { [G.myUid]: { name: name } },
-          playerOrder: [G.myUid],
-          brokenPicks: {}
-        };
-        await set(roomRef, newRoom);
-      } else {
-        // 참가자 입장
-        const updates = {};
-        updates[`players/${G.myUid}`] = { name: name };
-        const curOrder = snap.val().playerOrder || [];
-        if (!curOrder.includes(G.myUid)) {
-          updates[`playerOrder`] = [...curOrder, G.myUid];
-        }
-        await update(roomRef, updates);
-      }
-
-      document.getElementById("lobbyModal").style.display = "none";
-      document.getElementById("waitingModal").style.display = "flex";
-      document.getElementById("lobbyRoomCode").textContent = code;
-
-      listenToRoom(code);
-    });
-
-    function listenToRoom(code) {
-      onValue(ref(db, `saboteur_rooms/${code}`), (snap) => {
-        G.roomData = snap.val();
-        if (!G.roomData) return;
-
-        // 대기실 UI
-        if (G.roomData.status === "WAITING") {
-          const players = G.roomData.players || {};
-          const isHost = (G.roomData.hostUid === G.myUid);
-          const listEl = document.getElementById("waitingPlayersList");
-          listEl.innerHTML = Object.values(players).map(p => `<div>⛏️ ${p.name}</div>`).join("");
-
-          document.getElementById("btnStartGame").style.display = isHost ? "block" : "none";
-          document.getElementById("waitingNotice").style.display = isHost ? "none" : "block";
-          return;
-        }
-
-        document.getElementById("waitingModal").style.display = "none";
-
-        // 게임 진행 렌더
-        renderPlayersUI();
-        renderHandUI();
-        renderBoardUI();
-
-        // 게임 종료 판정
-        if (G.roomData.status === "FINISHED") {
-          const winner = G.roomData.winner;
-          const myRole = G.roomData.roles?.[G.myUid];
-          const isWin = (winner === "MINERS" && myRole === "MINER") || (winner === "SABOTEUR" && myRole === "SABOTEUR");
-
-          document.getElementById("resultTitle").textContent = isWin ? "🎉 승리했습니다!" : "💀 패배했습니다...";
-          document.getElementById("resultTitle").style.color = isWin ? "#2ea043" : "#da3633";
-          document.getElementById("resultDesc").innerHTML = `
-            승리 진영: <strong>${winner === "MINERS" ? "선량한 광부단" : "사보추어(방해꾼)"}</strong><br>
-            내 역할: <strong>${myRole === "SABOTEUR" ? "사보추어" : "광부"}</strong>
-          `;
-          document.getElementById("resultModal").style.display = "flex";
-        }
-      });
-    }
-
-    // 방장: 탐사 시작 (역할 분담 및 카드 분배)
-    document.getElementById("btnStartGame").addEventListener("click", async () => {
-      const order = G.roomData.playerOrder || [];
-      if (order.length < 1) return alert("최소 1명 이상이어야 합니다.");
-
-      // 역할 배정 (최소 1명 사보추어 지정)
-      const roles = {};
-      const saboIdx = Math.floor(Math.random() * order.length);
-      order.forEach((uid, idx) => {
-        roles[uid] = (idx === saboIdx) ? "SABOTEUR" : "MINER";
-      });
-
-      const fullDeck = createFullDeck();
-      const hands = {};
+      const order = roomData.playerOrder || [];
       order.forEach(uid => {
-        hands[uid] = fullDeck.splice(0, 5); // 1인당 5장 배분
+        const p = roomData.players?.[uid];
+        const isBroken = roomData.brokenPicks?.[uid] === true;
+
+        if (isBreak && isBroken) return;
+        if (!isBreak && !isBroken) return;
+
+        const btn = document.createElement("button");
+        btn.className = "btn btn-action";
+        btn.textContent = `${p.name} ${uid === myUid ? '(나)' : ''}`;
+        btn.addEventListener("click", () => {
+          modal.style.display = "none";
+          SFX.action();
+          tentativeAction = {
+            type: "ACTION",
+            cardIdx: selectedCardIdx,
+            extraUpdates: { [`brokenPicks/${uid}`]: isBreak ? true : null }
+          };
+          selectedCardIdx = null;
+          renderHandUI();
+          renderBoardUI();
+        });
+        listEl.appendChild(btn);
       });
 
-      const updates = {
-        status: "PLAYING",
-        grid: createInitialGrid(),
-        deck: fullDeck,
-        hands: hands,
-        roles: roles,
-        turnIdx: 0
-      };
+      if (listEl.children.length === 0) {
+        listEl.innerHTML = `<div style="font-size:0.7rem; color:#888;">적용 가능한 대상이 없습니다.</div>`;
+      }
 
-      await update(ref(db, `saboteur_rooms/${G.roomId}`), updates);
+      modal.style.display = "flex";
+    }
+
+    document.getElementById("btnCloseTargetModal").addEventListener("click", () => {
+      document.getElementById("targetPlayerModal").style.display = "none";
+      selectedCardIdx = null;
+      renderHandUI();
+      renderBoardUI();
     });
 
-    document.getElementById("btnRestartGame").addEventListener("click", () => {
-      location.reload();
-    });
+    function renderPlayersUI() {
+      if (!roomData || !roomData.players) return;
+      playersListEl.innerHTML = "";
+      const order = roomData.playerOrder || [];
+      const currentTurnUid = order[roomData.turnIdx];
+
+      order.forEach(uid => {
+        const p = roomData.players[uid];
+        if (!p) return;
+        const row = document.createElement("div");
+        row.className = `player-row ${uid === currentTurnUid ? "active-turn" : ""}`;
+        const isBroken = roomData.brokenPicks?.[uid] === true;
+
+        row.innerHTML = `
+          <span>${uid === currentTurnUid ? "👉 " : ""}${escapeHtml(p.name)} ${uid === myUid ? "(나)" : ""}</span>
+          <div>${isBroken ? '<span style="color:#da3633;">🔨고장</span>' : '<span style="color:#2ea043;">✔️정상</span>'}</div>
+        `;
+        playersListEl.appendChild(row);
+      });
+
+      const myRole = roomData.roles?.[myUid];
+      const roleBadge = document.getElementById("roleBadge");
+      if (myRole) {
+        roleBadge.style.display = "inline-block";
+        roleBadge.textContent = (myRole === "SABOTEUR") ? "사보추어 💣" : "선량한 광부 ⛏️";
+        roleBadge.className = `badge ${myRole === "SABOTEUR" ? "badge-saboteur" : "badge-miner"}`;
+      }
+
+      document.getElementById("deckRemainText").textContent = (roomData.deck || []).length;
+      document.getElementById("turnIndicator").style.display = (currentTurnUid === myUid) ? "inline-block" : "none";
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // 초기 실행
+    switchView("lobby");
   </script>
 </body>
 </html>
