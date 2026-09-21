@@ -52,13 +52,13 @@
       letter-spacing: 2px;
     }
 
-    /* 게임 카드 그리드 */
+    /* 게임 카드 그리드: 4개 배치에 맞춘 2x2 반응형 */
     .arcade-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 26px;
       width: 100%;
-      max-width: 1050px;
+      max-width: 900px;
     }
 
     .game-card {
@@ -86,14 +86,14 @@
     /* 카드 1: 릴레이소설 테마 */
     .card-novel:hover {
       border-color: #ff4757;
-      box-shadow: 0 0 25px rgba(255, 71, 87, 0.3);
+      box-shadow: 0 0 25px rgba(255, 71, 87, 0.35);
     }
     .card-novel .card-badge { background: #ff4757; }
 
     /* 카드 2: 다이스트로 테마 */
     .card-dice:hover {
       border-color: #f1e05a;
-      box-shadow: 0 0 25px rgba(241, 224, 90, 0.3);
+      box-shadow: 0 0 25px rgba(241, 224, 90, 0.35);
     }
     .card-dice .card-badge { background: #f1e05a; color: #000; }
 
@@ -103,6 +103,13 @@
       box-shadow: 0 0 25px rgba(0, 210, 211, 0.35);
     }
     .card-luck .card-badge { background: #00d2d3; color: #000; }
+
+    /* 카드 4: 사보타지 테마 */
+    .card-saboteur:hover {
+      border-color: #e67e22;
+      box-shadow: 0 0 25px rgba(230, 126, 34, 0.35);
+    }
+    .card-saboteur .card-badge { background: #e67e22; color: #fff; }
 
     .card-top {
       display: flex;
@@ -217,6 +224,24 @@
       </div>
       <div class="card-action">
         <span>원기옥 모으기</span>
+        <span>➔</span>
+      </div>
+    </a>
+
+    <!-- 게임 4: 사보타지 (SABOTEUR) -->
+    <a href="./saboteur/" class="game-card card-saboteur">
+      <div>
+        <div class="card-top">
+          <span class="game-icon">⛏️</span>
+          <span class="card-badge">MULTIPLAYER</span>
+        </div>
+        <h2 class="game-name">사보타지 (SABOTEUR)</h2>
+        <p class="game-desc">
+          실시간 턴제 금광 탐사 심리전! 9×5 광산에 길을 뚫어 진짜 금을 찾으세요. 숨어든 사보추어는 낙석과 고장난 도구로 길을 틀어막습니다.
+        </p>
+      </div>
+      <div class="card-action" style="color:#e67e22;">
+        <span>탐사 시작</span>
         <span>➔</span>
       </div>
     </a>
