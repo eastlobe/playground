@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SABOTEUR (사보타지)</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=MedievalSharp&family=Noto+Serif+KR:wght@500;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+KR:wght@500;700;900&display=swap');
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
     
@@ -19,19 +19,18 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 6px;
+      padding: 4px;
       overflow-x: hidden;
     }
 
-    /* 거친 통나무 및 암석 질감 캐비닛 */
     .mine-cabinet {
       width: 100%;
       max-width: 1140px;
       height: 98vh;
       height: 98dvh;
       background: #191009;
-      border: 8px solid #4a301c;
-      border-image: linear-gradient(to bottom, #6d472a, #362112, #5a3a22) 1;
+      border: 6px solid #4a301c;
+      border-radius: 6px;
       box-shadow: 0 0 50px rgba(0,0,0,0.95), inset 0 0 60px rgba(0,0,0,0.9);
       display: flex;
       flex-direction: column;
@@ -39,7 +38,6 @@
       overflow: hidden;
     }
 
-    /* 상단 헤더: 고목재 팻말 느낌 */
     header {
       height: 52px;
       background: #24160c;
@@ -49,29 +47,27 @@
       justify-content: space-between;
       align-items: center;
       flex-shrink: 0;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
     }
     .game-logo {
       font-family: 'Cinzel', serif;
       font-size: 1.35rem;
       font-weight: 900;
       color: #e5b352;
-      text-shadow: 2px 2px 5px #000, 0 0 10px rgba(229,179,82,0.4);
+      text-shadow: 2px 2px 5px #000;
       letter-spacing: 2px;
     }
     .header-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       font-size: 0.85rem;
     }
 
-    /* 클래식 양피지/황동 버튼 */
     .btn {
       font-family: 'Noto Serif KR', serif;
       font-size: 0.8rem;
       font-weight: 700;
-      padding: 7px 14px;
+      padding: 8px 14px;
       border: 2px solid #5a3c22;
       border-radius: 4px;
       background: linear-gradient(to bottom, #50371f, #332011);
@@ -103,11 +99,11 @@
     }
     .view-section.active { display: flex; }
 
-    /* [뷰 1: 로비] */
+    /* 로비 */
     #view-lobby {
-      padding: 24px;
+      padding: 20px;
       overflow-y: auto;
-      gap: 20px;
+      gap: 16px;
     }
     .parchment-panel {
       background: #ebd8b5;
@@ -115,7 +111,7 @@
       border: 3px solid #6b472a;
       border-radius: 4px;
       padding: 16px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.7), inset 0 0 30px rgba(168, 134, 88, 0.4);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.7);
     }
     .parchment-panel h3 {
       font-family: 'Cinzel', serif;
@@ -138,7 +134,6 @@
       font-weight: 700;
       outline: none;
     }
-    input[type="text"]:focus { border-color: #b5802f; }
 
     .room-grid {
       display: grid;
@@ -154,10 +149,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
     }
 
-    /* [뷰 2: 룸 인게임] */
+    /* 룸 인게임 */
     .room-subbar {
       height: 44px;
       background: #180f07;
@@ -214,7 +208,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #0d0804 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" opacity="0.03"><rect width="60" height="60" fill="%23fff"/></svg>');
+      background: #0d0804;
       overflow: auto;
       padding: 16px;
       position: relative;
@@ -242,13 +236,13 @@
     }
     .grid-cell.highlight-valid {
       outline: 3px dashed #ffd978 !important;
-      background: rgba(255, 217, 120, 0.25) !important;
+      background: rgba(255, 217, 120, 0.3) !important;
       cursor: pointer !important;
-      animation: validGlow 0.9s infinite alternate;
+      animation: validGlow 0.8s infinite alternate;
     }
     @keyframes validGlow {
       from { background: rgba(255, 217, 120, 0.15); }
-      to { background: rgba(255, 217, 120, 0.4); }
+      to { background: rgba(255, 217, 120, 0.45); }
     }
     .grid-cell.tentative-tile {
       outline: 3px solid #ffd978;
@@ -256,14 +250,14 @@
     }
     .grid-cell.highlight-rockfall {
       outline: 2px dashed #da3633;
-      background: rgba(218, 54, 51, 0.3);
+      background: rgba(218, 54, 51, 0.35);
     }
     .grid-cell.highlight-map {
       outline: 2px dashed #388bfd;
-      background: rgba(56, 139, 253, 0.3);
+      background: rgba(56, 139, 253, 0.35);
     }
 
-    /* 하단 패 트레이 (낡은 목재 선반 느낌) */
+    /* 하단 손패 콘솔 */
     .bottom-console {
       height: 148px;
       background: #1a0f07;
@@ -284,7 +278,6 @@
       align-items: center;
       padding: 4px 0;
     }
-    /* 카드 디자인: 손때 묻은 양피지 타로 카드 */
     .card {
       width: 78px;
       height: 116px;
@@ -301,7 +294,6 @@
       flex-shrink: 0;
       box-shadow: 0 4px 8px rgba(0,0,0,0.7);
       transition: transform 0.15s, border-color 0.15s;
-      position: relative;
     }
     .card:hover { transform: translateY(-4px); border-color: #ffd978; }
     .card.selected {
@@ -422,8 +414,6 @@
 </head>
 <body>
 
-  <div class="crt-overlay"></div>
-
   <div class="mine-cabinet">
     <header>
       <div class="game-logo">SABOTEUR</div>
@@ -433,7 +423,7 @@
       </div>
     </header>
 
-    <!-- [1. 로비 화면] -->
+    <!-- [1. 로비] -->
     <div id="view-lobby" class="view-section active">
       <div class="parchment-panel">
         <h3>광산 탐사 원정대 모집</h3>
@@ -450,7 +440,7 @@
       </div>
     </div>
 
-    <!-- [2. 게임 방 화면] -->
+    <!-- [2. 게임 방] -->
     <div id="view-room" class="view-section">
       <div class="room-subbar">
         <div style="display:flex; align-items:center; gap:8px;">
@@ -494,9 +484,21 @@
         <div id="handTray" class="hand-tray"></div>
         <div class="turn-controls">
           <button id="btnRotateCard" class="btn" style="display:none;">회전 🔄</button>
-          <button id="btnDiscardCard" class="btn btn-danger" style="display:none;">버리기 🗑️</button>
           <button id="btnConfirmTurn" class="btn btn-gold" style="display:none;">턴 확정 ➔</button>
           <button id="btnUndoAction" class="btn btn-danger" style="display:none;">취소 ↩️</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카드 클릭 시 액션 선택 모달 (화면 중앙 확실 노출) -->
+    <div id="cardActionBackdrop" class="modal-backdrop">
+      <div class="modal-box" style="max-width:320px;">
+        <h3 id="cardActionModalTitle">카드 행동 선택</h3>
+        <p id="cardActionModalDesc" style="font-size:0.8rem; color:#6b4728;"></p>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+          <button id="btnModalPlayCard" class="btn btn-gold" style="padding:12px;">사용하기 (길/행동)</button>
+          <button id="btnModalDiscardCard" class="btn btn-danger" style="padding:12px;">버리기 🗑️</button>
+          <button id="btnModalCancelCard" class="btn" style="padding:8px;">취소</button>
         </div>
       </div>
     </div>
@@ -539,9 +541,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // ──────────────────────────────────────────────────
     // [1] 사운드
-    // ──────────────────────────────────────────────────
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
     function playTone(freq, dur = 0.08, type = "triangle", endFreq = null) {
@@ -565,9 +565,7 @@
       rock: () => playTone(120, 0.25, "sawtooth", 50)
     };
 
-    // ──────────────────────────────────────────────────
-    // [2] 사보타지 공식 덱 & 타일
-    // ──────────────────────────────────────────────────
+    // [2] 공식 덱 & 타일
     const PATH_TYPES = {
       cross: { t: true, r: true, b: true, l: true, dead: false },
       t_down: { t: false, r: true, b: true, l: true, dead: false },
@@ -598,7 +596,6 @@
       return g;
     }
 
-    // 공식 덱: 길 44장 + 행동 27장 = 총 71장
     function createOfficialDeck() {
       const deck = [];
       const openKeys = ["cross", "t_down", "t_up", "straight_h", "straight_v", "curve_rb", "curve_lb", "curve_rt", "curve_lt"];
@@ -613,21 +610,17 @@
         deck.push({ kind: "path", pathKey: k, ...PATH_TYPES[k], name: "막힌 통로" });
       }
 
-      // 지도 6장, 낙석 3장
       for (let i = 0; i < 6; i++) deck.push({ kind: "action", actionType: "map", name: "비밀 지도 🗺️" });
       for (let i = 0; i < 3; i++) deck.push({ kind: "action", actionType: "rockfall", name: "낙석 🪨" });
 
-      // 도구 파괴 각 3장 (총 9장)
       for (let i = 0; i < 3; i++) deck.push({ kind: "action", actionType: "break_pick", targetTool: "pickaxe", name: "곡괭이 파괴 ⛏️❌" });
       for (let i = 0; i < 3; i++) deck.push({ kind: "action", actionType: "break_lamp", targetTool: "lamp", name: "랜턴 파괴 💡❌" });
       for (let i = 0; i < 3; i++) deck.push({ kind: "action", actionType: "break_cart", targetTool: "cart", name: "수레 파괴 🛒❌" });
 
-      // 단일 도구 수리 각 2장 (총 6장)
       for (let i = 0; i < 2; i++) deck.push({ kind: "action", actionType: "fix_single", fixTools: ["pickaxe"], name: "곡괭이 수리 ⛏️✨" });
       for (let i = 0; i < 2; i++) deck.push({ kind: "action", actionType: "fix_single", fixTools: ["lamp"], name: "랜턴 수리 💡✨" });
       for (let i = 0; i < 2; i++) deck.push({ kind: "action", actionType: "fix_single", fixTools: ["cart"], name: "수레 수리 🛒✨" });
 
-      // 듀얼 선택 수리 각 1장 (총 3장)
       deck.push({ kind: "action", actionType: "fix_dual", fixTools: ["pickaxe", "lamp"], name: "곡괭이/랜턴 수리 ⛏️💡" });
       deck.push({ kind: "action", actionType: "fix_dual", fixTools: ["pickaxe", "cart"], name: "곡괭이/수레 수리 ⛏️🛒" });
       deck.push({ kind: "action", actionType: "fix_dual", fixTools: ["lamp", "cart"], name: "랜턴/수레 수리 💡🛒" });
@@ -660,9 +653,7 @@
       return nuggets.sort(() => 0.5 - Math.random());
     }
 
-    // ──────────────────────────────────────────────────
-    // [3] 세션 & 닉네임
-    // ──────────────────────────────────────────────────
+    // [3] 세션 & 유저
     let myUid = localStorage.getItem("saboteur_uid") || ("u_" + Math.random().toString(36).substr(2, 7));
     let myName = localStorage.getItem("saboteur_nickname") || ("광부_" + myUid.substr(2, 4));
     let mySession = Date.now() + "_" + Math.random().toString(36).substr(2, 6);
@@ -684,7 +675,7 @@
     });
 
     document.getElementById("btn-change-nickname").addEventListener("click", () => {
-      const inp = prompt("사용할 새 닉네임을 입력하세요:", myName);
+      const inp = prompt("새 닉네임 입력:", myName);
       if (inp && inp.trim()) {
         myName = inp.trim();
         localStorage.setItem("saboteur_nickname", myName);
@@ -695,14 +686,13 @@
       }
     });
 
-    // ──────────────────────────────────────────────────
     // [4] 상태 변수
-    // ──────────────────────────────────────────────────
     let currentRoomId = null;
     let roomData = null;
     let selectedCardIdx = null;
     let selectedCardRotation = 0;
     let tentativeAction = null;
+    let isPlacementMode = false;
 
     function switchView(viewName) {
       document.getElementById("view-lobby").classList.toggle("active", viewName === "lobby");
@@ -748,7 +738,6 @@
       });
     });
 
-    // 방 개설
     document.getElementById("btn-create-room").addEventListener("click", async () => {
       const titleInput = document.getElementById("create-room-title");
       const title = titleInput.value.trim() || `${myName}의 갱도`;
@@ -793,7 +782,7 @@
         isReady: (r.hostUid === myUid),
         score: r.scores?.[myUid] || 0
       });
-      // 도구 상태 초기화 (정상: true)
+
       await update(ref(db, `saboteur_rooms/${rId}/tools/${myUid}`), {
         pickaxe: true, lamp: true, cart: true
       });
@@ -820,6 +809,8 @@
       roomData = null;
       selectedCardIdx = null;
       tentativeAction = null;
+      isPlacementMode = false;
+      document.getElementById("cardActionBackdrop").style.display = "none";
       document.getElementById("roundResultModal").style.display = "none";
       switchView("lobby");
     }
@@ -828,9 +819,7 @@
       if (confirm("정말 갱도에서 나가시겠습니까?")) leaveRoom();
     });
 
-    // ──────────────────────────────────────────────────
-    // [5] 룸 동기화 리스너
-    // ──────────────────────────────────────────────────
+    // [5] 룸 동기화
     function listenRoom(rId) {
       onValue(ref(db, `saboteur_rooms/${rId}`), snap => {
         roomData = snap.val();
@@ -958,7 +947,7 @@
         deck: fullDeck,
         hands: hands,
         roles: roles,
-        playerOrder: order,
+        playerOrder: order, // 순서 배열 저장
         turnIdx: 0,
         tools: tools,
         winner: null,
@@ -969,9 +958,7 @@
       await update(ref(db, `saboteur_rooms/${currentRoomId}`), updates);
     }
 
-    // ──────────────────────────────────────────────────
-    // [6] 타일 그래픽 & 출발점 연결 검증 (BFS 알고리즘)
-    // ──────────────────────────────────────────────────
+    // [6] 타일 렌더러 & BFS 경로 검증
     function renderTileSVG(t) {
       if (!t) return "";
       if (t.type === "goal") {
@@ -1008,7 +995,7 @@
     }
 
     // BFS로 출발지(2,0)로부터 끊김 없이 이어져 있는지 검사
-    function isConnectedToStartByPath(grid, targetR, targetC) {
+    function isConnectedToStartByPath(virtualGrid, targetR, targetC) {
       const queue = [{ r: 2, c: 0 }];
       const visited = new Set(["2_0"]);
 
@@ -1023,7 +1010,7 @@
         const cur = queue.shift();
         if (cur.r === targetR && cur.c === targetC) return true;
 
-        const curTile = grid[`${cur.r}_${cur.c}`];
+        const curTile = virtualGrid[`${cur.r}_${cur.c}`];
         if (!curTile) continue;
 
         for (const d of dirs) {
@@ -1034,10 +1021,10 @@
           if (nr < 0 || nr >= 5 || nc < 0 || nc >= 9) continue;
           if (visited.has(key)) continue;
 
-          const nextTile = grid[key];
+          const nextTile = virtualGrid[key];
           if (!nextTile) continue;
+          if (nextTile.type === "goal") continue;
 
-          // 맞닿은 면이 둘 다 열려 있어야 연결 진행
           if (curTile[d.me] && nextTile[d.opp]) {
             visited.add(key);
             queue.push({ r: nr, c: nc });
@@ -1048,7 +1035,7 @@
       return false;
     }
 
-    // [버그 수정 완료]: 주변 통로 일치 검사 + 출발지로부터 끊김 없이 이어져 있는지 종합 판정
+    // 길 타일 유효성 검사 (4방향 통로 일치 + 출발점 연결)
     function canPlaceTile(grid, r, c, tile) {
       if (grid && grid[`${r}_${c}`]) return false;
 
@@ -1087,17 +1074,26 @@
 
       if (conflict || !hasNeighbor) return false;
 
-      // 가상 보드판에 임시로 얹고 출발점과 연결되는지 검사
-      const tempGrid = { ...grid, [`${r}_${c}`]: tile };
-      return isConnectedToStartByPath(tempGrid, r, c);
+      const virtualGrid = { ...grid, [`${r}_${c}`]: tile };
+      return isConnectedToStartByPath(virtualGrid, r, c);
     }
 
     // ──────────────────────────────────────────────────
-    // [7] 보드 및 조작 인터랙션
+    // [7] 보드 인터랙션 & 핸드 제어 (턴 판정 완벽 수정)
     // ──────────────────────────────────────────────────
     const mineGridEl = document.getElementById("mineGrid");
     const handTrayEl = document.getElementById("handTray");
     const pListEl = document.getElementById("p-list");
+
+    // 안전한 턴 판정 함수 (배열/객체 인덱스 불일치 원천 해결)
+    function checkIsMyTurn() {
+      if (!roomData || !roomData.playerOrder) return false;
+      const order = Array.isArray(roomData.playerOrder) 
+        ? roomData.playerOrder 
+        : Object.values(roomData.playerOrder);
+      const curIdx = Number(roomData.turnIdx || 0);
+      return (order[curIdx] === myUid);
+    }
 
     function renderGameBoard() {
       if (!roomData || !roomData.grid) return;
@@ -1109,11 +1105,7 @@
         displayGrid[`${tentativeAction.r}_${tentativeAction.c}`] = tentativeAction.tile;
       }
 
-      const order = roomData.playerOrder || [];
-      const currentTurnUid = order[roomData.turnIdx || 0];
-      const isMyTurn = (currentTurnUid === myUid);
-      
-      // 도구 3종 중 하나라도 고장났는지 검사
+      const isMyTurn = checkIsMyTurn();
       const myTools = roomData.tools?.[myUid] || { pickaxe: true, lamp: true, cart: true };
       const isAnyToolBroken = (!myTools.pickaxe || !myTools.lamp || !myTools.cart);
 
@@ -1133,19 +1125,17 @@
               cell.classList.add("tentative-tile");
             }
 
-            // 낙석
-            if (!hasTentative && isMyTurn && myCard?.actionType === "rockfall" && !tile.fixed && tile.type !== "goal") {
+            if (!hasTentative && isMyTurn && myCard?.actionType === "rockfall" && isPlacementMode && !tile.fixed && tile.type !== "goal") {
               cell.classList.add("highlight-rockfall");
               cell.onclick = () => setupRockfall(r, c);
             }
-            // 지도
-            if (!hasTentative && isMyTurn && myCard?.actionType === "map" && tile.type === "goal" && tile.hidden) {
+            if (!hasTentative && isMyTurn && myCard?.actionType === "map" && isPlacementMode && tile.type === "goal" && tile.hidden) {
               cell.classList.add("highlight-map");
               cell.onclick = () => setupMap(tile);
             }
           } else {
-            // 길 타일 놓기: 도구가 정상이고 출발지와 연결 가능한 칸만 하이라이트
-            if (!hasTentative && isMyTurn && myCard?.kind === "path" && !isAnyToolBroken) {
+            // 길 타일 배치 가이드 (선택된 카드가 있고 사용 모드일 때)
+            if (!hasTentative && isMyTurn && myCard?.kind === "path" && isPlacementMode && !isAnyToolBroken) {
               const rotated = getRotatedTile(myCard, selectedCardRotation);
               if (canPlaceTile(displayGrid, r, c, rotated)) {
                 cell.classList.add("highlight-valid");
@@ -1164,9 +1154,7 @@
       const hand = roomData.hands[myUid] || [];
       handTrayEl.innerHTML = "";
 
-      const order = roomData.playerOrder || [];
-      const currentTurnUid = order[roomData.turnIdx || 0];
-      const isMyTurn = (currentTurnUid === myUid);
+      const isMyTurn = checkIsMyTurn();
       const hasTentative = Boolean(tentativeAction);
 
       hand.forEach((card, idx) => {
@@ -1191,26 +1179,28 @@
           <div class="card-label">${card.name}</div>
         `;
 
+        // 카드 클릭 시 100% 모달 팝업 오픈
         cardEl.onclick = (e) => {
           e.stopPropagation();
 
-          if (!isMyTurn) return alert("지금은 상대방의 턴입니다!");
-          if (hasTentative) return alert("'턴 확정'을 누르거나 '취소'를 누르세요.");
-
-          if (selectedCardIdx === idx) {
-            selectedCardIdx = null;
-          } else {
-            selectedCardIdx = idx;
-            selectedCardRotation = 0;
-
-            // 파괴 or 수리 카드일 때 대상 선택 모달 바로 띄움
-            if (card.actionType.startsWith("break") || card.actionType.startsWith("fix")) {
-              openTargetModal(card);
-            }
+          if (!isMyTurn) {
+            alert("지금은 상대방의 턴입니다! 내 턴이 올 때까지 기다려주세요.");
+            return;
           }
+          if (hasTentative) {
+            alert("이미 행동을 선택했습니다. 우측의 '턴 확정'을 누르거나 '취소'를 누르세요.");
+            return;
+          }
+
+          selectedCardIdx = idx;
+          selectedCardRotation = 0;
+          isPlacementMode = false;
 
           renderHandTray();
           renderGameBoard();
+
+          // 중앙 팝업 모달 오픈
+          openCardActionModal(card);
         };
 
         handTrayEl.appendChild(cardEl);
@@ -1219,43 +1209,75 @@
       updateTurnButtons();
     }
 
+    // 카드 액션 모달 오픈
+    function openCardActionModal(card) {
+      const modal = document.getElementById("cardActionBackdrop");
+      document.getElementById("cardActionModalTitle").textContent = card.name;
+      document.getElementById("cardActionModalDesc").textContent = 
+        (card.kind === "path") ? "길 타일을 갱도에 놓거나, 필요 없다면 버릴 수 있습니다." : "행동 카드를 발동하거나 버릴 수 있습니다.";
+      modal.style.display = "flex";
+    }
+
+    document.getElementById("btnModalCancelCard").onclick = () => {
+      document.getElementById("cardActionBackdrop").style.display = "none";
+      selectedCardIdx = null;
+      isPlacementMode = false;
+      renderHandTray();
+      renderGameBoard();
+    };
+
+    document.getElementById("btnModalDiscardCard").onclick = () => {
+      document.getElementById("cardActionBackdrop").style.display = "none";
+      tentativeAction = { type: "DISCARD", cardIdx: selectedCardIdx };
+      selectedCardIdx = null;
+      isPlacementMode = false;
+      renderHandTray();
+      renderGameBoard();
+    };
+
+    document.getElementById("btnModalPlayCard").onclick = () => {
+      document.getElementById("cardActionBackdrop").style.display = "none";
+      const card = roomData.hands[myUid][selectedCardIdx];
+
+      if (card.kind === "path") {
+        const myTools = roomData.tools?.[myUid] || { pickaxe: true, lamp: true, cart: true };
+        if (!myTools.pickaxe || !myTools.lamp || !myTools.cart) {
+          alert("도구가 고장나서 길을 놓을 수 없습니다! 카드를 버리거나 수리하세요.");
+          selectedCardIdx = null;
+          renderHandTray();
+          renderGameBoard();
+          return;
+        }
+        isPlacementMode = true;
+        renderHandTray();
+        renderGameBoard();
+      } else if (card.actionType.startsWith("break") || card.actionType.startsWith("fix")) {
+        openTargetModal(card);
+      } else {
+        isPlacementMode = true;
+        renderHandTray();
+        renderGameBoard();
+      }
+    };
+
     function updateTurnButtons() {
       const btnRotate = document.getElementById("btnRotateCard");
-      const btnDiscard = document.getElementById("btnDiscardCard");
       const btnConfirm = document.getElementById("btnConfirmTurn");
       const btnUndo = document.getElementById("btnUndoAction");
 
       const hasTentative = Boolean(tentativeAction);
       const myCard = (selectedCardIdx !== null) ? roomData?.hands?.[myUid]?.[selectedCardIdx] : null;
-      const order = roomData?.playerOrder || [];
-      const isMyTurn = (order[roomData?.turnIdx || 0] === myUid);
+
+      btnRotate.style.display = (isPlacementMode && myCard?.kind === "path") ? "block" : "none";
 
       if (hasTentative) {
         btnConfirm.style.display = "block";
         btnUndo.style.display = "block";
-        btnRotate.style.display = "none";
-        btnDiscard.style.display = "none";
       } else {
         btnConfirm.style.display = "none";
         btnUndo.style.display = "none";
-
-        if (isMyTurn && myCard) {
-          btnDiscard.style.display = "block";
-          btnRotate.style.display = (myCard.kind === "path") ? "block" : "none";
-        } else {
-          btnDiscard.style.display = "none";
-          btnRotate.style.display = "none";
-        }
       }
     }
-
-    document.getElementById("btnDiscardCard").onclick = () => {
-      if (selectedCardIdx === null) return;
-      tentativeAction = { type: "DISCARD", cardIdx: selectedCardIdx };
-      selectedCardIdx = null;
-      renderHandTray();
-      renderGameBoard();
-    };
 
     document.getElementById("btnRotateCard").onclick = () => {
       selectedCardRotation = (selectedCardRotation === 0) ? 180 : 0;
@@ -1267,6 +1289,7 @@
       tentativeAction = null;
       selectedCardIdx = null;
       selectedCardRotation = 0;
+      isPlacementMode = false;
       renderHandTray();
       renderGameBoard();
     };
@@ -1285,8 +1308,8 @@
         hand.push(deck.pop());
       }
 
-      const order = roomData.playerOrder || [];
-      const nextTurn = ((roomData.turnIdx || 0) + 1) % order.length;
+      const order = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder);
+      const nextTurn = ((Number(roomData.turnIdx) || 0) + 1) % order.length;
 
       const updates = {
         ...action.extraUpdates,
@@ -1306,6 +1329,7 @@
 
       tentativeAction = null;
       selectedCardIdx = null;
+      isPlacementMode = false;
 
       await update(ref(db, `saboteur_rooms/${currentRoomId}`), updates);
       btn.disabled = false;
@@ -1316,17 +1340,21 @@
       const updates = {};
       updates[`grid/${r}_${c}`] = tile;
 
-      const tempGrid = { ...roomData.grid, [`${r}_${c}`]: tile };
+      const virtualGrid = { ...roomData.grid, [`${r}_${c}`]: tile };
 
-      // 목적지 오픈 판정: 출발지로부터 경로가 닿았는지 엄격히 확인
-      const dirs = [{ r: r-1, c: c, me: 't' }, { r: r+1, c: c, me: 'b' }, { r: r, c: c-1, me: 'l' }, { r: r, c: c+1, me: 'r' }];
+      const dirs = [
+        { r: r-1, c: c, me: 't' },
+        { r: r+1, c: c, me: 'b' },
+        { r: r, c: c-1, me: 'l' },
+        { r: r, c: c+1, me: 'r' }
+      ];
+
       for (const d of dirs) {
         if (d.r < 0 || d.r >= 5 || d.c < 0 || d.c >= 9) continue;
         const target = roomData.grid ? roomData.grid[`${d.r}_${d.c}`] : null;
 
         if (target && target.type === "goal" && target.hidden && tile[d.me]) {
-          // 출발지부터 이 칸까지 온전하게 통로가 연결되었을 때만 오픈!
-          if (isConnectedToStartByPath(tempGrid, r, c)) {
+          if (isConnectedToStartByPath(virtualGrid, r, c)) {
             updates[`grid/${d.r}_${d.c}/hidden`] = false;
             if (target.realType === "GOLD") {
               updates.status = "FINISHED";
@@ -1345,6 +1373,7 @@
         extraUpdates: updates
       };
       selectedCardIdx = null;
+      isPlacementMode = false;
       renderHandTray();
       renderGameBoard();
     }
@@ -1357,6 +1386,7 @@
         extraUpdates: { [`grid/${r}_${c}`]: null }
       };
       selectedCardIdx = null;
+      isPlacementMode = false;
       renderHandTray();
       renderGameBoard();
     }
@@ -1369,11 +1399,11 @@
         extraUpdates: {}
       };
       selectedCardIdx = null;
+      isPlacementMode = false;
       renderHandTray();
       renderGameBoard();
     }
 
-    // 도구 파괴 / 수리 대상 모달
     function openTargetModal(card) {
       const modal = document.getElementById("targetPlayerModal");
       const listEl = document.getElementById("targetPlayersList");
@@ -1392,13 +1422,12 @@
         descEl.textContent = "자신 또는 동료 광부의 고장난 도구를 수리하세요.";
       }
 
-      const order = roomData.playerOrder || [];
+      const order = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder);
       order.forEach(id => {
         const p = roomData.players[id];
         const pTools = roomData.tools?.[id] || { pickaxe: true, lamp: true, cart: true };
 
         if (isBreak) {
-          // 이미 고장난 도구는 중복 파괴 불가
           if (!pTools[card.targetTool]) return;
 
           const btn = document.createElement("button");
@@ -1413,12 +1442,12 @@
               extraUpdates: { [`tools/${id}/${card.targetTool}`]: false }
             };
             selectedCardIdx = null;
+            isPlacementMode = false;
             renderHandTray();
             renderGameBoard();
           };
           listEl.appendChild(btn);
         } else {
-          // 수리 가능한 도구가 고장나 있는 플레이어만 표시
           card.fixTools.forEach(tName => {
             if (pTools[tName] === false) {
               const btn = document.createElement("button");
@@ -1433,6 +1462,7 @@
                   extraUpdates: { [`tools/${id}/${tName}`]: true }
                 };
                 selectedCardIdx = null;
+                isPlacementMode = false;
                 renderHandTray();
                 renderGameBoard();
               };
@@ -1451,14 +1481,15 @@
     document.getElementById("btnCloseTargetModal").onclick = () => {
       document.getElementById("targetPlayerModal").style.display = "none";
       selectedCardIdx = null;
+      isPlacementMode = false;
       renderHandTray();
       renderGameBoard();
     };
 
     function renderPlayerSidebar() {
       pListEl.innerHTML = "";
-      const order = roomData.playerOrder || [];
-      const curTurnId = order[roomData.turnIdx || 0];
+      const order = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder);
+      const curTurnId = order[Number(roomData.turnIdx) || 0];
       const isMyTurn = (curTurnId === myUid);
 
       document.getElementById("turn-badge").textContent = isMyTurn ? "👉 내 턴!" : "상대방 턴";
@@ -1497,9 +1528,7 @@
       document.getElementById("deck-remain-text").textContent = `${(roomData.deck || []).length}장`;
     }
 
-    // ──────────────────────────────────────────────────
-    // [8] 금덩이 분배 & 3라운드 매치
-    // ──────────────────────────────────────────────────
+    // [8] 3라운드 매치 결과
     async function showRoundOrFinalResult() {
       const modal = document.getElementById("roundResultModal");
       const titleEl = document.getElementById("resultTitle");
@@ -1513,7 +1542,7 @@
       const scores = { ...(roomData.scores || {}) };
 
       if (isHost && !roomData.roundScored) {
-        const order = roomData.playerOrder || [];
+        const order = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder);
         const roles = roomData.roles || {};
         const nuggetDeck = [...(roomData.nuggetDeck || createNuggetDeck())];
 
@@ -1555,7 +1584,8 @@
       `;
 
       scoresTable.innerHTML = `<div style="font-weight:700; color:#4a2b15; margin-bottom:4px;">[누적 금덩이 점수]</div>`;
-      (roomData.playerOrder || []).forEach(uid => {
+      const finalOrder = Array.isArray(roomData.playerOrder) ? roomData.playerOrder : Object.values(roomData.playerOrder || {});
+      finalOrder.forEach(uid => {
         const p = roomData.players[uid];
         const r = roomData.roles?.[uid];
         const sc = roomData.scores?.[uid] || 0;
