@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SABOTEUR ⛏️ (사보타지 실시간 멀티)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+      background-color: #0c0d12;
+      color: #e2e8f0;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 4px;
+      overflow-x: hidden;
+    }
+
+    .crt-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  radial-gradient(circle, rgba(0,0,0,0) 65%, rgba(0,0,0,0.75) 100%);
+      background-size: 100% 4px, 100% 100%;
+      pointer-events: none;
+      z-index: 300;
+    }
+
+    .game-cabinet {
+      width: 100%;
+      max-width: 1080px;
+      height: 96vh;
+      height: 96dvh;
+      background: #151821;
+      border: 3px solid #3b4252;
+      border-radius: 12px;
+      box-shadow: 0 0 30px rgba(241, 224, 90, 0.12), inset 0 0 20px rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 상단 탑바 */
+    .top-bar {
+      height: 54px;
+      background: #0d1017;
+      border-bottom: 2px solid #2e3440;
+      display: flex;
+      padding: 6px 14px;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 10px;
+    }
+    .brand-title {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.8rem;
+      color: #f1e05a;
+      letter-spacing: 1px;
+    }
+    .game-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 0.75rem;
+      align-items: center;
+    }
+    .badge {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.55rem;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+    .badge-miner { background: #2ea043; color: #fff; }
+    .badge-saboteur { background: #da3633; color: #fff; }
+    .badge-turn { background: #f1e05a; color: #000; animation: pulse 1s infinite alternate; }
+    @keyframes pulse { from { opacity: 0.7; } to { opacity: 1; } }
+
+    /* 메인 플레이 필드 */
+    .playfield {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 좌측/상단: 광산 9x5 격자 보드판 */
+    .board-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #090b10;
+      overflow: auto;
+      padding: 10px;
+      position: relative;
+    }
+    .mine-grid {
+      display: grid;
+      grid-template-columns: repeat(9, clamp(42px, 5.5vw, 68px));
+      grid-template-rows: repeat(5, clamp(42px, 5.5vw, 68px));
+      gap: 3px;
+      background: #1c202a;
+      padding: 6px;
+      border: 2px solid #2e3440;
+      border-radius: 8px;
+    }
+    .grid-cell {
+      background: #11141c;
+      border: 1px solid #212634;
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.15s, outline 0.15s;
+    }
+    .grid-cell.highlight-valid {
+      outline: 2px dashed #2ea043;
+      background: rgba(46, 160, 67, 0.15);
+      cursor: crosshair;
+    }
+    .grid-cell.highlight-rockfall {
+      outline: 2px dashed #da3633;
+      background: rgba(218, 54, 51, 0.2);
+    }
+    .grid-cell.highlight-map {
+      outline: 2px dashed #58a6ff;
+      background: rgba(88, 166, 255, 0.2);
+    }
+
+    /* 타일 그래픽 (SVG 인라인 렌더링) */
+    .tile-svg {
+      width: 100%;
+      height: 100%;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* 우측: 플레이어 리스트 및 덱 정보 */
+    .sidebar {
+      width: 250px;
+      background: #0d1017;
+      border-left: 2px solid #2e3440;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .players-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .player-row {
+      background: #161b24;
+      border: 1px solid #2e3440;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .player-row.active-turn {
+      border-color: #f1e05a;
+      background: #252212;
+    }
+
+    /* 하단: 내 패 (Hand) & 액션 컨트롤 바 */
+    .bottom-deck {
+      height: 140px;
+      background: #0d1017;
+      border-top: 2px solid #2e3440;
+      display: flex;
+      padding: 8px 14px;
+      gap: 12px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .cards-tray {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      height: 100%;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+    .card-item {
+      width: 76px;
+      height: 108px;
+      background: #1a1e29;
+      border: 2px solid #3b4252;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .card-item:hover { transform: translateY(-4px); border-color: #f1e05a; }
+    .card-item.selected {
+      border-color: #58a6ff;
+      transform: translateY(-8px);
+      box-shadow: 0 0 12px rgba(88, 166, 255, 0.6);
+    }
+    .card-preview {
+      width: 54px;
+      height: 54px;
+      background: #11141c;
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .card-title {
+      font-size: 0.55rem;
+      font-weight: bold;
+      text-align: center;
+      color: #e2e8f0;
+    }
+
+    .btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.65rem;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-action { background: #f1e05a; color: #000; }
+    .btn-discard { background: #da3633; color: #fff; }
+    .btn-start { background: #2ea043; color: #fff; }
+
+    /* 모달 */
+    .modal-backdrop {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10, 13, 18, 0.94);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 250;
+      flex-direction: column;
+      padding: 16px;
+    }
+    .modal-box {
+      width: 100%;
+      max-width: 440px;
+      background: #161b24;
+      border: 3px solid #f1e05a;
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+
+    /* 모바일 분기 */
+    @media (max-width: 860px) {
+      .game-cabinet { height: 100vh; height: 100dvh; border: none; border-radius: 0; }
+      .sidebar { display: none; } /* 모바일에서는 하단 팝업이나 간소화 */
+      .top-bar { height: 48px; padding: 4px 8px; }
+      .brand-title { font-size: 0.7rem; }
+      .bottom-deck { height: 110px; padding: 4px 8px; }
+      .card-item { width: 62px; height: 92px; }
+      .card-preview { width: 44px; height: 44px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="crt-overlay"></div>
+
+  <div class="game-cabinet">
+    <!-- 상단 바 -->
+    <div class="top-bar">
+      <div class="brand-title">SABOTEUR ⛏️</div>
+      <div class="game-stats">
+        <span id="roleBadge" class="badge" style="display:none;">역할</span>
+        <span>남은 덱: <strong id="deckRemainText" style="color:#58a6ff;">-</strong>장</span>
+        <span id="turnIndicator" class="badge badge-turn" style="display:none;">내 턴!</span>
+      </div>
+    </div>
+
+    <!-- 플레이 필드 -->
+    <div class="playfield">
+      <!-- 9x5 격자 보드판 -->
+      <div class="board-container">
+        <div id="mineGrid" class="mine-grid"></div>
+      </div>
+
+      <!-- 우측 사이드바 (플레이어 목록 & 상태) -->
+      <div class="sidebar">
+        <div style="font-size:0.75rem; color:#f1e05a; font-weight:bold; border-bottom:1px solid #2e3440; padding-bottom:4px;">참가 광부 목록</div>
+        <div id="playersList" class="players-list"></div>
+        <div id="gameLogBox" style="flex:1; background:#11141c; border:1px solid #2e3440; border-radius:6px; padding:6px; font-size:0.65rem; color:#8b949e; overflow-y:auto;">
+          [대기실] 참가자를 기다리고 있습니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 패 (Hand) & 컨트롤 -->
+    <div class="bottom-deck">
+      <div id="cardsTray" class="cards-tray"></div>
+      <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+        <button id="btnRotateCard" class="btn btn-action" disabled>회전 🔄</button>
+        <button id="btnDiscardCard" class="btn btn-discard" disabled>버리기 🗑️</button>
+      </div>
+    </div>
+
+    <!-- 1. 방 로비 / 입장 모달 -->
+    <div id="lobbyModal" class="modal-backdrop" style="display:flex;">
+      <div class="modal-box">
+        <h2 style="font-family:'Press Start 2P', cursive; color:#f1e05a; font-size:0.9rem;">광산 탐사대 모집 ⛏️</h2>
+        <p style="font-size:0.75rem; color:#8b949e;">친구와 함께 금광을 찾거나 사보타주하세요!</p>
+        <input type="text" id="inputNickname" placeholder="내 광부 닉네임" style="background:#0d1017; border:1px solid #3b4252; color:#fff; padding:8px; border-radius:6px; text-align:center;">
+        <input type="text" id="inputRoomCode" placeholder="방 코드 (예: mine1)" value="mine1" style="background:#0d1017; border:1px solid #3b4252; color:#fff; padding:8px; border-radius:6px; text-align:center;">
+        <div style="display:flex; gap:6px;">
+          <button id="btnJoinRoom" class="btn btn-action" style="flex:1;">방 입장 / 생성</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 대기실 모달 (방장 시작) -->
+    <div id="waitingModal" class="modal-backdrop">
+      <div class="modal-box">
+        <h2 style="font-family:'Press Start 2P', cursive; color:#2ea043; font-size:0.85rem;">광산 대기실</h2>
+        <div style="font-size:0.75rem;">방 코드: <strong id="lobbyRoomCode" style="color:#f1e05a;"></strong></div>
+        <div id="waitingPlayersList" style="font-size:0.75rem; background:#0d1017; padding:8px; border-radius:6px; display:flex; flex-direction:column; gap:4px;"></div>
+        <button id="btnStartGame" class="btn btn-start" style="display:none;">탐사 시작! (게임 개시)</button>
+        <div id="waitingNotice" style="font-size:0.68rem; color:#8b949e;">방장이 시작하기를 기다리고 있습니다...</div>
+      </div>
+    </div>
+
+    <!-- 3. 결과 모달 -->
+    <div id="resultModal" class="modal-backdrop">
+      <div class="modal-box">
+        <h2 id="resultTitle" style="font-family:'Press Start 2P', cursive; font-size:1rem;"></h2>
+        <p id="resultDesc" style="font-size:0.8rem; color:#ccc; line-height:1.4;"></p>
+        <button id="btnRestartGame" class="btn btn-action" style="margin-top:8px;">새 게임 시작</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, update, onValue, get, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsvhq6Y1KzvUJ9gUlF6_QEgYoj-FzuZMU",
+      authDomain: "relaynovelphobia.firebaseapp.com",
+      databaseURL: "https://relaynovelphobia-default-rtdb.firebaseio.com",
+      projectId: "relaynovelphobia",
+      appId: "1:365170091282:web:6956889d54eea4070bbfcb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // ──────────────────────────────────────────────────
+    // [1] 사운드 엔진
+    // ──────────────────────────────────────────────────
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function playTone(freq, duration = 0.08, type = "square", endFreq = null) {
+      try {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+    const SFX = {
+      tile: () => playTone(350, 0.08, "triangle", 180),
+      action: () => playTone(500, 0.12, "sine", 750),
+      gold: () => [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => playTone(f, 0.12, "triangle"), i * 80)),
+      rockfall: () => playTone(140, 0.3, "sawtooth", 40)
+    };
+
+    // ──────────────────────────────────────────────────
+    // [2] 타일 규격 & 덱 정의 (상하좌우 4방향 개방 비트: T, R, B, L)
+    // ──────────────────────────────────────────────────
+    const PATH_TYPES = {
+      cross: { t: true, r: true, b: true, l: true, dead: false },
+      t_down: { t: false, r: true, b: true, l: true, dead: false },
+      t_up: { t: true, r: true, b: false, l: true, dead: false },
+      straight_h: { t: false, r: true, b: false, l: true, dead: false },
+      straight_v: { t: true, r: false, b: true, l: false, dead: false },
+      curve_rb: { t: false, r: true, b: true, l: false, dead: false },
+      curve_lb: { t: false, r: false, b: true, l: true, dead: false },
+      curve_rt: { t: true, r: true, b: false, l: false, dead: false },
+      curve_lt: { t: true, r: false, b: false, l: true, dead: false },
+      // 막다른 길 (Dead ends)
+      dead_cross: { t: true, r: true, b: true, l: true, dead: true },
+      dead_h: { t: false, r: true, b: false, l: true, dead: true },
+      dead_v: { t: true, r: false, b: true, l: false, dead: true },
+      dead_r: { t: false, r: true, b: false, l: false, dead: true }
+    };
+
+    // ──────────────────────────────────────────────────
+    // [3] 게임 상태 (State)
+    // ──────────────────────────────────────────────────
+    const G = {
+      roomId: null,
+      myUid: "user_" + Math.random().toString(36).substr(2, 6),
+      myName: "광부",
+      roomData: null,
+      selectedCardIdx: null,
+      selectedCardRotation: 0 // 0 or 180도
+    };
+
+    // 9x5 보드 초기 좌표 생성 (출발점: 0,2 / 목적지: 8,0 / 8,2 / 8,4)
+    function createInitialGrid() {
+      const grid = {};
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 9; c++) {
+          grid[`${r}_${c}`] = null;
+        }
+      }
+      // 출발 타일 (십자로)
+      grid["2_0"] = { type: "cross", ...PATH_TYPES.cross, fixed: true };
+
+      // 목적지 3개 (하나는 GOLD, 둘은 COAL)
+      const goals = ["GOLD", "COAL", "COAL"].sort(() => 0.5 - Math.random());
+      grid["0_8"] = { type: "goal", hidden: true, realType: goals[0] };
+      grid["2_8"] = { type: "goal", hidden: true, realType: goals[1] };
+      grid["4_8"] = { type: "goal", hidden: true, realType: goals[2] };
+
+      return grid;
+    }
+
+    // 초기 카드 덱 풀 생성
+    function createFullDeck() {
+      const deck = [];
+      const pathKeys = Object.keys(PATH_TYPES);
+      for (let i = 0; i < 40; i++) {
+        const key = pathKeys[Math.floor(Math.random() * pathKeys.length)];
+        deck.push({ kind: "path", pathKey: key, ...PATH_TYPES[key] });
+      }
+      // 액션 카드
+      for (let i = 0; i < 6; i++) deck.push({ kind: "action", actionType: "map", name: "지도 🗺️" });
+      for (let i = 0; i < 5; i++) deck.push({ kind: "action", actionType: "rockfall", name: "낙석 🪨" });
+      for (let i = 0; i < 4; i++) deck.push({ kind: "action", actionType: "break_pick", name: "곡괭이 파괴 🔨" });
+      for (let i = 0; i < 4; i++) deck.push({ kind: "action", actionType: "fix_pick", name: "곡괭이 수리 🛠️" });
+      return deck.sort(() => 0.5 - Math.random());
+    }
+
+    // ──────────────────────────────────────────────────
+    // [4] SVG 타일 그래픽 렌더러
+    // ──────────────────────────────────────────────────
+    function renderTileSVG(tile) {
+      if (!tile) return "";
+
+      if (tile.type === "goal") {
+        if (tile.hidden) {
+          return `
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <rect width="100" height="100" fill="#252b3b" rx="8"/>
+              <text x="50" y="60" fill="#f1e05a" font-size="34" font-weight="bold" text-anchor="middle">?</text>
+            </svg>
+          `;
+        } else if (tile.realType === "GOLD") {
+          return `
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <rect width="100" height="100" fill="#b8860b" rx="8"/>
+              <circle cx="50" cy="50" r="28" fill="#ffd700"/>
+              <text x="50" y="58" fill="#000" font-size="20" font-weight="bold" text-anchor="middle">GOLD</text>
+            </svg>
+          `;
+        } else {
+          return `
+            <svg class="tile-svg" viewBox="0 0 100 100">
+              <rect width="100" height="100" fill="#30363d" rx="8"/>
+              <circle cx="50" cy="50" r="26" fill="#1c2128"/>
+              <text x="50" y="56" fill="#8b949e" font-size="18" font-weight="bold" text-anchor="middle">돌</text>
+            </svg>
+          `;
+        }
+      }
+
+      // 길 타일 렌더
+      const pathColor = tile.dead ? "#ff7b72" : "#d29922";
+      const bg = "#1c2128";
+      let paths = `<rect width="100" height="100" fill="${bg}" rx="8"/>`;
+
+      // 중심점
+      paths += `<circle cx="50" cy="50" r="14" fill="${pathColor}"/>`;
+      if (tile.t) paths += `<rect x="36" y="0" width="28" height="50" fill="${pathColor}"/>`;
+      if (tile.b) paths += `<rect x="36" y="50" width="28" height="50" fill="${pathColor}"/>`;
+      if (tile.l) paths += `<rect x="0" y="36" width="50" height="28" fill="${pathColor}"/>`;
+      if (tile.r) paths += `<rect x="50" y="36" width="50" height="28" fill="${pathColor}"/>`;
+
+      if (tile.dead) {
+        paths += `<line x1="30" y1="30" x2="70" y2="70" stroke="#da3633" stroke-width="6"/>
+                  <line x1="70" y1="30" x2="30" y2="70" stroke="#da3633" stroke-width="6"/>`;
+      }
+      if (tile.fixed) {
+        paths += `<text x="50" y="56" fill="#fff" font-size="14" font-weight="bold" text-anchor="middle">출발</text>`;
+      }
+
+      return `<svg class="tile-svg" viewBox="0 0 100 100">${paths}</svg>`;
+    }
+
+    // ──────────────────────────────────────────────────
+    // [5] 길 연결 유효성 검사 (규칙 알고리즘)
+    // ──────────────────────────────────────────────────
+    function isValidTilePlacement(grid, r, c, tile) {
+      if (grid[`${r}_${c}`] !== null) return false;
+
+      const neighbors = [
+        { r: r - 1, c: c, myDir: "t", oppDir: "b" },
+        { r: r + 1, c: c, myDir: "b", oppDir: "t" },
+        { r: r, c: c - 1, myDir: "l", oppDir: "r" },
+        { r: r, c: c + 1, myDir: "r", oppDir: "l" }
+      ];
+
+      let hasConnectedNeighbor = false;
+
+      for (const n of neighbors) {
+        if (n.r < 0 || n.r >= 5 || n.c < 0 || n.c >= 9) continue;
+        const neighborTile = grid[`${n.r}_${n.c}`];
+        if (!neighborTile) continue;
+
+        // 목적지 미오픈 타일과의 인접
+        if (neighborTile.type === "goal") {
+          if (tile[n.myDir]) {
+            // 목적지와 연결됨
+            hasConnectedNeighbor = true;
+          }
+          continue;
+        }
+
+        // 맞닿은 면의 개방 상태가 정확히 일치해야 함
+        const myOpen = Boolean(tile[n.myDir]);
+        const neighborOpen = Boolean(neighborTile[n.oppDir]);
+
+        if (myOpen !== neighborOpen) {
+          return false; // 한쪽은 뚫렸는데 한쪽은 막혔으면 배치 불가
+        }
+
+        if (myOpen && neighborOpen) {
+          hasConnectedNeighbor = true;
+        }
+      }
+
+      return hasConnectedNeighbor;
+    }
+
+    // ──────────────────────────────────────────────────
+    // [6] 보드 및 UI 렌더링
+    // ──────────────────────────────────────────────────
+    const mineGridEl = document.getElementById("mineGrid");
+    const cardsTrayEl = document.getElementById("cardsTray");
+    const playersListEl = document.getElementById("playersList");
+    const btnRotateCard = document.getElementById("btnRotateCard");
+    const btnDiscardCard = document.getElementById("btnDiscardCard");
+
+    function renderBoardUI() {
+      if (!G.roomData) return;
+      const grid = G.roomData.grid || {};
+      mineGridEl.innerHTML = "";
+
+      const myCard = G.selectedCardIdx !== null ? G.roomData.hands?.[G.myUid]?.[G.selectedCardIdx] : null;
+      const isMyTurn = (G.roomData.playerOrder?.[G.roomData.turnIdx] === G.myUid);
+      const isPickBroken = G.roomData.brokenPicks?.[G.myUid] === true;
+
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cellKey = `${r}_${c}`;
+          const tile = grid[cellKey];
+          const cell = document.createElement("div");
+          cell.className = "grid-cell";
+
+          if (tile) {
+            cell.innerHTML = renderTileSVG(tile);
+            // 낙석 카드 선택 시 파괴 가능 타일 하이라이트 (출발점, 목적지 제외)
+            if (isMyTurn && myCard?.actionType === "rockfall" && !tile.fixed && tile.type !== "goal") {
+              cell.classList.add("highlight-rockfall");
+              cell.addEventListener("click", () => executeRockfall(r, c));
+            }
+            // 지도 카드 선택 시 목적지 카드 하이라이트
+            if (isMyTurn && myCard?.actionType === "map" && tile.type === "goal" && tile.hidden) {
+              cell.classList.add("highlight-map");
+              cell.addEventListener("click", () => executeMapAction(r, c, tile));
+            }
+          } else {
+            // 빈 칸: 길 타일 배치 가능 여부 하이라이트
+            if (isMyTurn && myCard?.kind === "path" && !isPickBroken) {
+              const currentPlacedTile = getRotatedTile(myCard, G.selectedCardRotation);
+              if (isValidTilePlacement(grid, r, c, currentPlacedTile)) {
+                cell.classList.add("highlight-valid");
+                cell.addEventListener("click", () => placePathTile(r, c, currentPlacedTile));
+              }
+            }
+          }
+
+          mineGridEl.appendChild(cell);
+        }
+      }
+    }
+
+    function getRotatedTile(tile, rot) {
+      if (rot === 0) return { ...tile };
+      // 180도 회전
+      return {
+        ...tile,
+        t: tile.b,
+        b: tile.t,
+        l: tile.r,
+        r: tile.l
+      };
+    }
+
+    function renderHandUI() {
+      if (!G.roomData) return;
+      const hand = G.roomData.hands?.[G.myUid] || [];
+      cardsTrayEl.innerHTML = "";
+
+      const isMyTurn = (G.roomData.playerOrder?.[G.roomData.turnIdx] === G.myUid);
+
+      hand.forEach((card, idx) => {
+        const item = document.createElement("div");
+        item.className = `card-item ${G.selectedCardIdx === idx ? "selected" : ""}`;
+
+        let previewHTML = "";
+        if (card.kind === "path") {
+          const previewTile = getRotatedTile(card, G.selectedCardIdx === idx ? G.selectedCardRotation : 0);
+          previewHTML = `<div class="card-preview">${renderTileSVG(previewTile)}</div>`;
+        } else {
+          previewHTML = `<div class="card-preview" style="font-size:1.6rem;">${card.actionType === "map" ? "🗺️" : (card.actionType === "rockfall" ? "🪨" : "🔨")}</div>`;
+        }
+
+        item.innerHTML = `
+          ${previewHTML}
+          <div class="card-title">${card.name || (card.dead ? "막힌길" : "길 타일")}</div>
+        `;
+
+        item.addEventListener("click", () => {
+          if (!isMyTurn) return;
+          if (G.selectedCardIdx === idx) {
+            G.selectedCardIdx = null;
+          } else {
+            G.selectedCardIdx = idx;
+            G.selectedCardRotation = 0;
+          }
+          updateControlButtons();
+          renderHandUI();
+          renderBoardUI();
+        });
+
+        cardsTrayEl.appendChild(item);
+      });
+
+      updateControlButtons();
+    }
+
+    function updateControlButtons() {
+      const isMyTurn = (G.roomData?.playerOrder?.[G.roomData?.turnIdx] === G.myUid);
+      const hasCardSelected = (G.selectedCardIdx !== null);
+      btnDiscardCard.disabled = !isMyTurn || !hasCardSelected;
+      btnRotateCard.disabled = !isMyTurn || !hasCardSelected || (G.roomData?.hands?.[G.myUid]?.[G.selectedCardIdx]?.kind !== "path");
+    }
+
+    btnRotateCard.addEventListener("click", () => {
+      G.selectedCardRotation = (G.selectedCardRotation === 0) ? 180 : 0;
+      renderHandUI();
+      renderBoardUI();
+    });
+
+    btnDiscardCard.addEventListener("click", () => {
+      if (G.selectedCardIdx === null) return;
+      discardAndNextTurn();
+    });
+
+    function renderPlayersUI() {
+      if (!G.roomData) return;
+      playersListEl.innerHTML = "";
+      const order = G.roomData.playerOrder || [];
+      const currentTurnUid = order[G.roomData.turnIdx];
+
+      order.forEach(uid => {
+        const p = G.roomData.players?.[uid];
+        if (!p) return;
+        const row = document.createElement("div");
+        row.className = `player-row ${uid === currentTurnUid ? "active-turn" : ""}`;
+        const isBroken = G.roomData.brokenPicks?.[uid] === true;
+
+        row.innerHTML = `
+          <span>${uid === currentTurnUid ? "👉 " : ""}${p.name} ${uid === G.myUid ? "(나)" : ""}</span>
+          <div style="display:flex; gap:4px;">
+            ${isBroken ? '<span style="color:#da3633;">🔨고장</span>' : ''}
+          </div>
+        `;
+        playersListEl.appendChild(row);
+      });
+
+      // 내 역할 표시
+      const myRole = G.roomData.roles?.[G.myUid];
+      const roleBadge = document.getElementById("roleBadge");
+      if (myRole) {
+        roleBadge.style.display = "inline-block";
+        roleBadge.textContent = myRole === "SABOTEUR" ? "사보추어 💣" : "선량한 광부 ⛏️";
+        roleBadge.className = `badge ${myRole === "SABOTEUR" ? "badge-saboteur" : "badge-miner"}`;
+      }
+
+      document.getElementById("deckRemainText").textContent = (G.roomData.deck || []).length;
+      document.getElementById("turnIndicator").style.display = (currentTurnUid === G.myUid) ? "inline-block" : "none";
+    }
+
+    // ──────────────────────────────────────────────────
+    // [7] 게임 액션 실행 로직
+    // ──────────────────────────────────────────────────
+    async function placePathTile(r, c, tile) {
+      SFX.tile();
+      const updates = {};
+      updates[`grid/${r}_${c}`] = tile;
+
+      // 목적지 오픈 판정 체크
+      const neighbors = [
+        { r: r - 1, c: c, dir: "t" },
+        { r: r + 1, c: c, dir: "b" },
+        { r: r, c: c - 1, dir: "l" },
+        { r: r, c: c + 1, dir: "r" }
+      ];
+
+      for (const n of neighbors) {
+        if (n.r < 0 || n.r >= 5 || n.c < 0 || n.c >= 9) continue;
+        const target = G.roomData.grid?.[`${n.r}_${n.c}`];
+        if (target && target.type === "goal" && target.hidden && tile[n.dir]) {
+          // 목적지 공개!
+          updates[`grid/${n.r}_${n.c}/hidden`] = false;
+          if (target.realType === "GOLD") {
+            // 광부 승리!
+            updates[`status`] = "FINISHED";
+            updates[`winner`] = "MINERS";
+            SFX.gold();
+          }
+        }
+      }
+
+      await completeTurnWithCardUsage(updates);
+    }
+
+    async function executeRockfall(r, c) {
+      if (!confirm("이 길 타일을 파괴하시겠습니까?")) return;
+      SFX.rockfall();
+      const updates = {};
+      updates[`grid/${r}_${c}`] = null;
+      await completeTurnWithCardUsage(updates);
+    }
+
+    function executeMapAction(r, c, tile) {
+      alert(`🗺️ [지도 확인 결과]\n해당 목적지는 [${tile.realType === "GOLD" ? "⭐ 진짜 금광!" : "❌ 석탄(돌)"}] 입니다!`);
+      completeTurnWithCardUsage({});
+    }
+
+    async function discardAndNextTurn() {
+      playTone(200, 0.1, "sine");
+      await completeTurnWithCardUsage({});
+    }
+
+    // 턴 종료 처리 (패 소모, 새 카드 드로우, 다음 사람 턴)
+    async function completeTurnWithCardUsage(extraUpdates = {}) {
+      const hand = [...(G.roomData.hands?.[G.myUid] || [])];
+      hand.splice(G.selectedCardIdx, 1);
+
+      const deck = [...(G.roomData.deck || [])];
+      if (deck.length > 0) {
+        hand.push(deck.pop());
+      }
+
+      const order = G.roomData.playerOrder || [];
+      const nextTurnIdx = (G.roomData.turnIdx + 1) % order.length;
+
+      // 덱 소진 및 아무도 금을 못 찾았을 때 사보추어 승리 판정
+      let statusUpdate = {};
+      if (deck.length === 0 && hand.length === 0) {
+        statusUpdate = { status: "FINISHED", winner: "SABOTEUR" };
+      }
+
+      const updates = {
+        ...extraUpdates,
+        ...statusUpdate,
+        [`hands/${G.myUid}`]: hand,
+        deck: deck,
+        turnIdx: nextTurnIdx
+      };
+
+      G.selectedCardIdx = null;
+      G.selectedCardRotation = 0;
+
+      await update(ref(db, `saboteur_rooms/${G.roomId}`), updates);
+    }
+
+    // ──────────────────────────────────────────────────
+    // [8] 방 입장 및 대기실 동기화 (Firebase)
+    // ──────────────────────────────────────────────────
+    document.getElementById("btnJoinRoom").addEventListener("click", async () => {
+      const name = document.getElementById("inputNickname").value.trim() || "탐사광부";
+      const code = document.getElementById("inputRoomCode").value.trim() || "mine1";
+      G.myName = name;
+      G.roomId = code;
+
+      const roomRef = ref(db, `saboteur_rooms/${code}`);
+      const snap = await get(roomRef);
+
+      if (!snap.exists()) {
+        // 방장: 방 생성
+        const newRoom = {
+          hostUid: G.myUid,
+          status: "WAITING",
+          players: { [G.myUid]: { name: name } },
+          playerOrder: [G.myUid],
+          brokenPicks: {}
+        };
+        await set(roomRef, newRoom);
+      } else {
+        // 참가자 입장
+        const updates = {};
+        updates[`players/${G.myUid}`] = { name: name };
+        const curOrder = snap.val().playerOrder || [];
+        if (!curOrder.includes(G.myUid)) {
+          updates[`playerOrder`] = [...curOrder, G.myUid];
+        }
+        await update(roomRef, updates);
+      }
+
+      document.getElementById("lobbyModal").style.display = "none";
+      document.getElementById("waitingModal").style.display = "flex";
+      document.getElementById("lobbyRoomCode").textContent = code;
+
+      listenToRoom(code);
+    });
+
+    function listenToRoom(code) {
+      onValue(ref(db, `saboteur_rooms/${code}`), (snap) => {
+        G.roomData = snap.val();
+        if (!G.roomData) return;
+
+        // 대기실 UI
+        if (G.roomData.status === "WAITING") {
+          const players = G.roomData.players || {};
+          const isHost = (G.roomData.hostUid === G.myUid);
+          const listEl = document.getElementById("waitingPlayersList");
+          listEl.innerHTML = Object.values(players).map(p => `<div>⛏️ ${p.name}</div>`).join("");
+
+          document.getElementById("btnStartGame").style.display = isHost ? "block" : "none";
+          document.getElementById("waitingNotice").style.display = isHost ? "none" : "block";
+          return;
+        }
+
+        document.getElementById("waitingModal").style.display = "none";
+
+        // 게임 진행 렌더
+        renderPlayersUI();
+        renderHandUI();
+        renderBoardUI();
+
+        // 게임 종료 판정
+        if (G.roomData.status === "FINISHED") {
+          const winner = G.roomData.winner;
+          const myRole = G.roomData.roles?.[G.myUid];
+          const isWin = (winner === "MINERS" && myRole === "MINER") || (winner === "SABOTEUR" && myRole === "SABOTEUR");
+
+          document.getElementById("resultTitle").textContent = isWin ? "🎉 승리했습니다!" : "💀 패배했습니다...";
+          document.getElementById("resultTitle").style.color = isWin ? "#2ea043" : "#da3633";
+          document.getElementById("resultDesc").innerHTML = `
+            승리 진영: <strong>${winner === "MINERS" ? "선량한 광부단" : "사보추어(방해꾼)"}</strong><br>
+            내 역할: <strong>${myRole === "SABOTEUR" ? "사보추어" : "광부"}</strong>
+          `;
+          document.getElementById("resultModal").style.display = "flex";
+        }
+      });
+    }
+
+    // 방장: 탐사 시작 (역할 분담 및 카드 분배)
+    document.getElementById("btnStartGame").addEventListener("click", async () => {
+      const order = G.roomData.playerOrder || [];
+      if (order.length < 1) return alert("최소 1명 이상이어야 합니다.");
+
+      // 역할 배정 (최소 1명 사보추어 지정)
+      const roles = {};
+      const saboIdx = Math.floor(Math.random() * order.length);
+      order.forEach((uid, idx) => {
+        roles[uid] = (idx === saboIdx) ? "SABOTEUR" : "MINER";
+      });
+
+      const fullDeck = createFullDeck();
+      const hands = {};
+      order.forEach(uid => {
+        hands[uid] = fullDeck.splice(0, 5); // 1인당 5장 배분
+      });
+
+      const updates = {
+        status: "PLAYING",
+        grid: createInitialGrid(),
+        deck: fullDeck,
+        hands: hands,
+        roles: roles,
+        turnIdx: 0
+      };
+
+      await update(ref(db, `saboteur_rooms/${G.roomId}`), updates);
+    });
+
+    document.getElementById("btnRestartGame").addEventListener("click", () => {
+      location.reload();
+    });
+  </script>
+</body>
+</html>
