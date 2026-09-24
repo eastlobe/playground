@@ -3,15 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>eastlobe's playground 🕹️</title>
+  <title>eastlobe's playground 🎈</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+    /* 둥글고 귀여운 느낌의 무료 한글 폰트 적용 */
+    @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    
     body {
-      background-color: #0b0e14;
-      color: #e2e8f0;
-      font-family: 'Share Tech Mono', monospace;
+      /* 맑은 하늘과 잔디밭이 연상되는 배경 */
+      background: linear-gradient(180deg, #87CEFA 0%, #e0f7fa 70%, #a8e6cf 100%);
+      color: #333;
+      font-family: 'Jua', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -21,95 +24,122 @@
       position: relative;
     }
 
-    /* CRT 스캔라인 & 비네트 필터 */
-    .crt-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-                  radial-gradient(circle, rgba(0,0,0,0) 65%, rgba(0,0,0,0.75) 100%);
-      background-size: 100% 4px, 100% 100%;
-      pointer-events: none;
-      z-index: 100;
+    /* CSS로 만드는 놀이터 햇살과 구름 */
+    .sun {
+      position: absolute;
+      top: 40px;
+      right: 50px;
+      width: 80px;
+      height: 80px;
+      background: #feca57;
+      border-radius: 50%;
+      box-shadow: 0 0 40px #feca57, 0 0 80px #feca57, 0 0 120px #feca57;
+      animation: pulse 3s infinite alternate;
+      z-index: 0;
+    }
+
+    .cloud {
+      position: absolute;
+      background: #ffffff;
+      border-radius: 50px;
+      opacity: 0.9;
+      animation: float 40s linear infinite;
+      z-index: 1;
+    }
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: #ffffff;
+      border-radius: 50%;
+    }
+    
+    .cloud1 { width: 120px; height: 40px; top: 12%; left: -150px; }
+    .cloud1::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+    .cloud1::after { width: 70px; height: 70px; top: -30px; right: 15px; }
+    
+    .cloud2 { width: 90px; height: 30px; top: 30%; left: -150px; animation-duration: 55s; animation-delay: 15s; opacity: 0.7; transform: scale(0.8); }
+    .cloud2::before { width: 40px; height: 40px; top: -15px; left: 10px; }
+    .cloud2::after { width: 50px; height: 50px; top: -20px; right: 15px; }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.1); }
+    }
+    @keyframes float {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(120vw); }
+    }
+
+    header, main, footer {
+      position: relative;
+      z-index: 10;
     }
 
     header {
       text-align: center;
       margin-bottom: 50px;
+      margin-top: 20px;
     }
 
     .brand-title {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 1.8rem;
-      color: #00ffaa;
-      text-shadow: 0 0 15px rgba(0, 255, 170, 0.6), 0 0 30px rgba(0, 255, 170, 0.3);
+      font-size: 3.2rem;
+      color: #ff6b6b;
+      text-shadow: 3px 3px 0px #fff, 6px 6px 0px #feca57;
       margin-bottom: 12px;
-      letter-spacing: 1px;
-    }
-
-    .subtitle {
-      font-size: 0.95rem;
-      color: #8b949e;
       letter-spacing: 2px;
     }
 
-    /* 게임 카드 그리드: 4개 배치에 맞춘 2x2 반응형 */
-    .arcade-grid {
+    .subtitle {
+      font-size: 1.2rem;
+      color: #5f27cd;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 6px 20px;
+      border-radius: 25px;
+      display: inline-block;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .playground-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 26px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
       width: 100%;
       max-width: 900px;
     }
 
+    /* 장난감 블록 같은 카드 디자인 */
     .game-card {
-      background: #161b22;
-      border: 3px solid #30363d;
-      border-radius: 14px;
-      padding: 24px;
+      background: #ffffff;
+      border-radius: 25px;
+      padding: 25px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       min-height: 290px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      box-shadow: 0 10px 0px rgba(0,0,0,0.1);
       text-decoration: none;
-      color: inherit;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      color: #444;
+      border: 4px solid #fff;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
     .game-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 14px 35px rgba(0,0,0,0.8);
+      transform: translateY(-10px) rotate(1deg);
+      box-shadow: 0 15px 0px rgba(0,0,0,0.15);
     }
 
-    /* 카드 1: 릴레이소설 테마 */
-    .card-novel:hover {
-      border-color: #ff4757;
-      box-shadow: 0 0 25px rgba(255, 71, 87, 0.35);
-    }
-    .card-novel .card-badge { background: #ff4757; }
-
-    /* 카드 2: 다이스트로 테마 */
-    .card-dice:hover {
-      border-color: #f1e05a;
-      box-shadow: 0 0 25px rgba(241, 224, 90, 0.35);
-    }
-    .card-dice .card-badge { background: #f1e05a; color: #000; }
-
-    /* 카드 3: 행운 원기옥 테마 */
-    .card-luck:hover {
-      border-color: #00d2d3;
-      box-shadow: 0 0 25px rgba(0, 210, 211, 0.35);
-    }
-    .card-luck .card-badge { background: #00d2d3; color: #000; }
-
-    /* 카드 4: 사보타지 테마 */
-    .card-saboteur:hover {
-      border-color: #e67e22;
-      box-shadow: 0 0 25px rgba(230, 126, 34, 0.35);
-    }
-    .card-saboteur .card-badge { background: #e67e22; color: #fff; }
+    /* 각 게임별 고유 색상 부여 (파스텔톤) */
+    .card-novel { border-color: #ff9ff3; }
+    .card-novel .card-badge { background: #ff9ff3; color: #fff; }
+    
+    .card-dice { border-color: #feca57; }
+    .card-dice .card-badge { background: #feca57; color: #fff; }
+    
+    .card-luck { border-color: #48dbfb; }
+    .card-luck .card-badge { background: #48dbfb; color: #fff; }
+    
+    .card-saboteur { border-color: #ff6b6b; }
+    .card-saboteur .card-badge { background: #ff6b6b; color: #fff; }
 
     .card-top {
       display: flex;
@@ -118,29 +148,32 @@
       margin-bottom: 16px;
     }
 
-    .game-icon { font-size: 2.8rem; }
+    .game-icon { 
+      font-size: 3rem; 
+      filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.1));
+    }
 
     .card-badge {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 0.6rem;
-      padding: 4px 8px;
-      border-radius: 4px;
-      color: #fff;
-      font-weight: bold;
+      font-size: 0.9rem;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-weight: normal;
+      box-shadow: 0 3px 0px rgba(0,0,0,0.1);
     }
 
     .game-name {
-      font-family: 'Press Start 2P', cursive;
-      font-size: 1.05rem;
-      color: #fff;
+      font-size: 1.6rem;
+      color: #222f3e;
       margin-bottom: 12px;
       line-height: 1.4;
     }
 
     .game-desc {
-      font-size: 0.85rem;
-      color: #8b949e;
-      line-height: 1.6;
+      font-size: 1.05rem;
+      color: #576574;
+      line-height: 1.5;
+      font-family: sans-serif; /* 본문은 가독성을 위해 기본 폰트 혼용 */
+      font-weight: 500;
     }
 
     .card-action {
@@ -148,32 +181,45 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-top: 1px dashed #30363d;
-      padding-top: 14px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: #58a6ff;
+      padding: 12px 18px;
+      border-radius: 18px;
+      font-size: 1.1rem;
+      color: #5f27cd;
+      background: #f1f2f6;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .game-card:hover .card-action {
+      background: #5f27cd;
+      color: #fff;
+    }
+
+    .card-saboteur:hover .card-action {
+      background: #ff6b6b;
     }
 
     footer {
       margin-top: auto;
       padding-top: 60px;
-      font-size: 0.75rem;
-      color: #484f58;
+      font-size: 1rem;
+      color: #576574;
       text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <div class="crt-overlay"></div>
+  <!-- 배경 꾸미기 요소 -->
+  <div class="sun"></div>
+  <div class="cloud cloud1"></div>
+  <div class="cloud cloud2"></div>
 
   <header>
     <h1 class="brand-title">EASTLOBE'S PLAYGROUND</h1>
     <p class="subtitle">EXPERIMENT WEB TOYS & RETRO GAMES</p>
   </header>
 
-  <main class="arcade-grid">
+  <main class="playground-grid">
     <!-- 게임 1: 릴레이소설공포증 -->
     <a href="./novel/" class="game-card card-novel">
       <div>
@@ -183,7 +229,7 @@
         </div>
         <h2 class="game-name">릴레이소설공포증</h2>
         <p class="game-desc">
-          실시간 턴제 공포 릴레이 집필! 시간 초과 경고와 실시간 몽글몽글 리액션, 친구 방 개설 푸시 알림과 출판 도서관을 지원합니다.
+          실시간 턴제 공포 릴레이 집필!
         </p>
       </div>
       <div class="card-action">
@@ -201,7 +247,7 @@
         </div>
         <h2 class="game-name">DICEATRO</h2>
         <p class="game-desc">
-          발라트로 감성의 주사위 덱빌딩 포커! 조커 주사위 시너지, 에디션 셰이더, 타로 덱 압축과 행성 족보 강화로 점수를 폭발시키세요.
+          발라트로 감성의 주사위 덱빌딩 포커!
         </p>
       </div>
       <div class="card-action">
@@ -219,7 +265,7 @@
         </div>
         <h2 class="game-name">행운 원기옥</h2>
         <p class="game-desc">
-          일상의 스트레스와 불운을 행운 에너지로 치환하는 멘탈 케어 토이! 악마를 짓눌러 원기옥을 모으고, 천사를 쓰다듬어 행운을 소진하세요.
+          불운이 당신을 괴롭히나요?
         </p>
       </div>
       <div class="card-action">
@@ -228,8 +274,8 @@
       </div>
     </a>
 
-    <!-- 게임 4: 사보타지 (SABOTEUR) -->
-    <a href="./saboteur/" class="game-card card-saboteur">
+    <!-- 게임 4: 사보타지 (SABOTEUR) - 링크 수정됨 -->
+    <a href="https://saboteur-online.onrender.com/" class="game-card card-saboteur">
       <div>
         <div class="card-top">
           <span class="game-icon">⛏️</span>
@@ -237,10 +283,10 @@
         </div>
         <h2 class="game-name">사보타지 (SABOTEUR)</h2>
         <p class="game-desc">
-          실시간 턴제 금광 탐사 심리전! 9×5 광산에 길을 뚫어 진짜 금을 찾으세요. 숨어든 사보추어는 낙석과 고장난 도구로 길을 틀어막습니다.
+          실시간 턴제 광부 마피아게임! 
         </p>
       </div>
-      <div class="card-action" style="color:#e67e22;">
+      <div class="card-action">
         <span>탐사 시작</span>
         <span>➔</span>
       </div>
